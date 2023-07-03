@@ -34,10 +34,12 @@ class GraphService(
 
     fun getGraphData(): GraphDataVO {
         val listNodes = nodeRepository.findAll()
+            .filter { !it.isDeleted }
             .map {
                 it.toModel(portRepository.findAllByNodeId(it.id), actionOptionRepository.findAllByNodeId(it.id))
             }
         val listEdges = edgeRepository.findAll()
+            .filter { !it.isDeleted }
             .map {
                 it.toModel()
             }
@@ -116,5 +118,32 @@ class GraphService(
        return actionOptionRepository.findAllByNodeId(id)
            .filter { it.visible }
            .map { it.toVO() }
+    }
+
+    @Transactional
+    fun deleteNode(nodeId: String): Boolean {
+        nodeRepository.findById(nodeId).ifPresent {
+            nodeRepository.save(it.copy(isDeleted = true))
+        }
+
+        portRepository.findAllByNodeId(nodeId).forEach {
+            portRepository.save(it.copy(isDeleted = true))
+        }
+
+        actionRepository.findByNodeId(nodeId).ifPresent {
+            actionRepository.save(it.copy(isDeleted = true))
+        }
+
+        actionOptionRepository.findAllByNodeId(nodeId).forEach {
+            actionOptionRepository.save(it.copy(isDeleted = true))
+        }
+        return true
+    }
+
+    fun deleteEdge(edgeId: String): Boolean {
+        edgeRepository.findById(edgeId).ifPresent {
+            edgeRepository.save(it.copy(isDeleted = true))
+        }
+        return true
     }
 }

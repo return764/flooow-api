@@ -16,18 +16,28 @@ class WebSocketController(
     private val template: SimpMessagingTemplate,
 ) {
 
-    @MessageMapping("/graph/{id}/node/create")
-    fun createNode(node: Node, @DestinationVariable id: String) {
-        template.convertAndSend("/queue/graph/$id", graphService.addNode(node))
+    @MessageMapping("/graph/{graphId}/node/create")
+    fun createNode(node: Node, @DestinationVariable graphId: String) {
+        template.convertAndSend("/queue/graph/$graphId", graphService.addNode(node))
     }
 
-    @MessageMapping("/graph/{id}/edge/create")
-    fun createEdge(edge: Edge, @DestinationVariable id: String) {
-        template.convertAndSend("/queue/graph/$id", graphService.addEdge(edge))
+    @MessageMapping("/graph/{graphId}/edge/create")
+    fun createEdge(edge: Edge, @DestinationVariable graphId: String) {
+        template.convertAndSend("/queue/graph/$graphId", graphService.addEdge(edge))
     }
 
-    @MessageMapping("/graph/{id}/node/move")
-    fun moveNode(event: MoveNodeEvent, @DestinationVariable id: String) {
-        template.convertAndSend("/queue/graph/$id", graphService.moveNode(event))
+    @MessageMapping("/graph/{graphId}/node/move")
+    fun moveNode(event: MoveNodeEvent, @DestinationVariable graphId: String) {
+        template.convertAndSend("/queue/graph/$graphId", graphService.moveNode(event))
+    }
+
+    @MessageMapping("/graph/{graphId}/node/delete")
+    fun deleteNode(nodeId: String, @DestinationVariable graphId: String) {
+        template.convertAndSend("/queue/graph/$graphId", graphService.deleteNode(nodeId))
+    }
+
+    @MessageMapping("/graph/{graphId}/edge/delete")
+    fun deleteEdge(edgeId: String, @DestinationVariable graphId: String) {
+        template.convertAndSend("/queue/graph/$graphId", graphService.deleteEdge(edgeId))
     }
 }

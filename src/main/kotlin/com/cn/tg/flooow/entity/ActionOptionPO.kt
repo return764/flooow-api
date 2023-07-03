@@ -24,7 +24,9 @@ data class ActionOptionPO(
     @Column(name = "type")
     val type: String,
     @Column(name = "visible")
-    val visible: Boolean
+    val visible: Boolean,
+    @Column(name = "is_deleted")
+    val isDeleted: Boolean = false
 ) {
     fun toVO(): NodeOptionVO {
         return NodeOptionVO(

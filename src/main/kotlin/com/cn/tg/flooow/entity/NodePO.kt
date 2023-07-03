@@ -21,6 +21,8 @@ data class NodePO (
     val width: Int?,
     @Column(name = "height")
     val height: Int?,
+    @Column(name = "is_deleted")
+    val isDeleted: Boolean = false
 ) {
     fun toModel(ports: List<PortPO>, options: List<ActionOptionPO>): Node {
         return Node(

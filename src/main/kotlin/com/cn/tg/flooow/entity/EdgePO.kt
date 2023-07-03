@@ -21,6 +21,8 @@ data class EdgePO(
     val targetCellId: String,
     @Column(name = "target_port_id")
     val targetPortId: String,
+    @Column(name = "is_deleted")
+    val isDeleted: Boolean = false
 ) {
     fun toModel(): Edge {
         return Edge(

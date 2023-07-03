@@ -14,6 +14,8 @@ data class PortPO(
     val nodeId: String,
     @Column(name = "`group`")
     val group: String,
+    @Column(name = "is_deleted")
+    val isDeleted: Boolean = false
 ) {
     fun toModel(): PortMeta {
         return PortMeta(

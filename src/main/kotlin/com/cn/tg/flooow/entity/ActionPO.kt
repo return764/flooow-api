@@ -23,5 +23,7 @@ data class ActionPO(
     @Enumerated(EnumType.STRING)
     val status: ActionStatus,
     @Column(name = "value")
-    val value: String
+    val value: String,
+    @Column(name = "is_deleted")
+    val isDeleted: Boolean = false
 )
