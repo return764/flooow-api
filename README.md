@@ -8,4 +8,4 @@ project: flooow-api
 
 ## Bug Fix
 
-- [ ] fix error of zIndex serialization
+- [X] fix error of zIndex serialization
