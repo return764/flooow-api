@@ -2,11 +2,10 @@ package com.cn.tg.flooow.service
 
 import com.cn.tg.flooow.entity.ActionOptionPO
 import com.cn.tg.flooow.entity.EdgePO
-import com.cn.tg.flooow.entity.vo.NodeOptionVO
+import com.cn.tg.flooow.entity.vo.ActionOptionVO
 import com.cn.tg.flooow.entity.vo.ActionTemplateVO
-import com.cn.tg.flooow.model.action.ActionChains
+import com.cn.tg.flooow.entity.vo.ActionVO
 import com.cn.tg.flooow.repository.ActionRepository
-import com.cn.tg.flooow.repository.TaskRepository
 import com.cn.tg.flooow.model.Edge
 import com.cn.tg.flooow.entity.vo.GraphDataVO
 import com.cn.tg.flooow.entity.vo.MoveNodeEvent
@@ -24,7 +23,6 @@ import org.springframework.stereotype.Service
 class GraphService(
     private val actionRepository: ActionRepository,
     private val actionOptionRepository: ActionOptionRepository,
-    private val taskRepository: TaskRepository,
     private val nodeRepository: NodeRepository,
     private val portRepository: PortRepository,
     private val edgeRepository: EdgeRepository,
@@ -46,12 +44,18 @@ class GraphService(
         return GraphDataVO(listNodes, listEdges)
     }
 
-    fun executeGraph(id: String) {
-        val currentTask = taskRepository.findById(id).orElseThrow { throw RuntimeException() }
-        val actionPOs = currentTask.actions
-        val ac: ActionChains = ActionChains(actionPOs)
+    fun getAction(nodeId: String): ActionVO {
+        return actionRepository.findByNodeId(nodeId).map {
+            val template = actionTemplateRepository.findById(it.templateId!!).get()
+            ActionVO(
+                id = it.id!!,
+                templateName = template.templateName,
+                className = template.className,
+                status = it.status,
+                value = it.value
+            )
+        }.get()
     }
-
 
     @Transactional
     fun addNode(node: Node): Node {
@@ -114,9 +118,10 @@ class GraphService(
         return event
     }
 
-    fun getNodeOptions(id: String): List<NodeOptionVO> {
+    fun getActionOptions(id: String): List<ActionOptionVO> {
        return actionOptionRepository.findAllByNodeId(id)
            .filter { it.visible }
+           .filter { !it.isDeleted }
            .map { it.toVO() }
     }
 

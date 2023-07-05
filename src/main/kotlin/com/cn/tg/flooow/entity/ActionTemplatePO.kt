@@ -13,6 +13,9 @@ data class ActionTemplatePO(
     @Column(name = "id")
     val id: String? = null,
 
+    @Column(name = "class_name")
+    val className: String,
+
     @Column(name = "template_name")
     val templateName: String,
 

@@ -1,6 +1,6 @@
 package com.cn.tg.flooow.controller
 
-import com.cn.tg.flooow.entity.vo.NodeOptionVO
+import com.cn.tg.flooow.entity.vo.ActionOptionVO
 import com.cn.tg.flooow.entity.vo.ActionTemplateVO
 import com.cn.tg.flooow.service.GraphService
 import com.cn.tg.flooow.entity.vo.GraphDataVO
@@ -18,7 +18,6 @@ class GraphController(
 
     @PostMapping("execute")
     fun execute(): String {
-        graphService.executeGraph("sadsa")
         return "11"
     }
 
@@ -27,10 +26,9 @@ class GraphController(
         return graphService.getGraphData()
     }
 
-
-    @GetMapping("node/options/{id}")
-    fun getActionOptions(@PathVariable id: String): List<NodeOptionVO>{
-        return graphService.getNodeOptions(id)
+    @GetMapping("action/options/{id}")
+    fun getActionOptions(@PathVariable id: String): List<ActionOptionVO>{
+        return graphService.getActionOptions(id)
     }
 
     @GetMapping("templates")

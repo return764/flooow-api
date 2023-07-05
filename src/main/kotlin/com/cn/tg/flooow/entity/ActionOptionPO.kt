@@ -1,6 +1,6 @@
 package com.cn.tg.flooow.entity
 
-import com.cn.tg.flooow.entity.vo.NodeOptionVO
+import com.cn.tg.flooow.entity.vo.ActionOptionVO
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -28,8 +28,9 @@ data class ActionOptionPO(
     @Column(name = "is_deleted")
     val isDeleted: Boolean = false
 ) {
-    fun toVO(): NodeOptionVO {
-        return NodeOptionVO(
+    fun toVO(): ActionOptionVO {
+        return ActionOptionVO(
+            id = id!!,
             label = key,
             type = type,
             value = value

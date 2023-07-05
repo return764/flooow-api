@@ -31,6 +31,7 @@ class ActionInitializeListener(
                 if (template == null) {
                     val newTemplate = actionTemplateRepository.save(ActionTemplatePO(
                         templateName = actionMarker.name,
+                        className = it.javaClass.name,
                         type = actionMarker.type,
                         shape = actionMarker.shape,
                         parent = actionMarker.parent.ifEmpty { null }

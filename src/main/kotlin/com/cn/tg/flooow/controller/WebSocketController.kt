@@ -3,6 +3,7 @@ package com.cn.tg.flooow.controller
 import com.cn.tg.flooow.entity.vo.MoveNodeEvent
 import com.cn.tg.flooow.model.Edge
 import com.cn.tg.flooow.model.Node
+import com.cn.tg.flooow.service.GraphExecutionService
 import com.cn.tg.flooow.service.GraphService
 import org.springframework.messaging.handler.annotation.DestinationVariable
 import org.springframework.messaging.handler.annotation.MessageMapping
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Controller
 @Controller
 class WebSocketController(
     private val graphService: GraphService,
+    private val graphExecutionService: GraphExecutionService,
     private val template: SimpMessagingTemplate,
 ) {
 
@@ -39,5 +41,10 @@ class WebSocketController(
     @MessageMapping("/graph/{graphId}/edge/delete")
     fun deleteEdge(edgeId: String, @DestinationVariable graphId: String) {
         template.convertAndSend("/queue/graph/$graphId", graphService.deleteEdge(edgeId))
+    }
+
+    @MessageMapping("/graph/{graphId}/execution")
+    fun executeGraph(@DestinationVariable graphId: String) {
+        template.convertAndSend("/queue/graph/$graphId", graphExecutionService.execute(graphId))
     }
 }
