@@ -7,26 +7,38 @@ import com.cn.tg.flooow.model.Node
 import com.cn.tg.flooow.model.action.Action
 import com.cn.tg.flooow.model.action.annotation.ActionOption
 import com.cn.tg.flooow.model.dag.DirectedAcyclicGraph
-import kotlinx.coroutines.async
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import org.slf4j.LoggerFactory
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Component
 import java.lang.reflect.Field
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
+import kotlin.coroutines.CoroutineContext
+import kotlin.system.measureTimeMillis
 
 
 @Component
 class GraphExecutionService(
     private val graphService: GraphService,
     private val template: SimpMessagingTemplate,
-    private val taskScheduler: TaskScheduler
+    private val taskExecutor: TaskExecutor
 ) {
 
-    fun execute(graphId: String) {
+    fun execute(graphId: String) = runBlocking {
         val graphData = graphService.getGraphData()
         val executionDAG = buildGraph(graphData)
         val context = TaskContext(graphService, template, executionDAG)
-        taskScheduler.schedule(context)
+        taskExecutor.execute(context)
     }
 
     private fun buildGraph(graphData: GraphDataVO): ExecutionDAG {
@@ -52,11 +64,16 @@ data class TaskEdge(
     val target: Task
 )
 
+data class ExecutionTask(
+    val task: Task,
+    val action: Action
+)
+
 class ExecutionDAG(tasks: List<Task>, edges: List<TaskEdge>) {
     // 还应该包含当前正在运行的图的id
     private val dag: DirectedAcyclicGraph<Task> = DirectedAcyclicGraph()
-    // 应该维护一个队列，旧的任务执行完成后，将新的任务添加到队列中
-    private val currentTasks: MutableList<Task> by lazy { dag.getFirsts().toMutableList() }
+
+    private val tasksCache = CopyOnWriteArrayList<ExecutionTask>()
 
     init {
         tasks.forEach {
@@ -67,11 +84,19 @@ class ExecutionDAG(tasks: List<Task>, edges: List<TaskEdge>) {
         }
     }
 
-    fun loadRunnableTasks(): List<Action> {
-        return currentTasks.map { loadExecutionTask(it) }
+    fun getFirstTasks(): List<ExecutionTask> {
+        return loadTasks(dag.getFirsts())
     }
 
-    private fun loadExecutionTask(t: Task): Action {
+    fun loadTask(task: Task): ExecutionTask {
+        return buildExecutionTask(task)
+    }
+
+    fun loadTasks(tasks: List<Task>): List<ExecutionTask> {
+        return tasks.map { buildExecutionTask(it) }
+    }
+
+    private fun buildExecutionTask(t: Task): ExecutionTask {
         val clazz = Class.forName(t.action.className)
         val task = clazz.getDeclaredConstructor().newInstance() as Action
         val optionName2Field = getDeclaredFieldWithActionMarker(task.javaClass)
@@ -79,22 +104,28 @@ class ExecutionDAG(tasks: List<Task>, edges: List<TaskEdge>) {
             optionName2Field[it.label]?.trySetAccessible()
             optionName2Field[it.label]?.set(task, it.value)
         }
-        return task
+        return ExecutionTask(t, task).also { tasksCache.add(it) }
     }
 
-    fun findNextTasks(): List<Task> {
-        return findNextTasks(currentTasks).also {
-            currentTasks.clear()
-            currentTasks.addAll(it)
+    fun findNextTasks(task: ExecutionTask): List<ExecutionTask> {
+        val tasks = dag.next(task.task).orElse(listOf())
+
+        val cached = tasksCache.filter { tasks.contains(it.task) }
+        if (cached.isNotEmpty()) {
+            return cached
         }
+
+        return loadTasks(tasks)
     }
 
-    private fun findNextTasks(tasks: List<Task>): List<Task> {
-        return tasks.map {
-            this.dag.next(it).orElse(listOf())
-        }
-            .flatten()
-            .distinct()
+    fun findPreviousTasks(task: ExecutionTask): List<ExecutionTask> {
+        val tasks = dag.previous(task.task).orElse(listOf())
+        tasks.filter {t -> tasksCache.find { it.task == t } == null }.forEach { buildExecutionTask(it) }
+        return tasksCache.filter { tasks.contains(it.task) }
+    }
+
+    fun findTaskByAction(action: Action): ExecutionTask? {
+        return tasksCache.find { it.action == action }
     }
 
     private fun getDeclaredFieldWithActionMarker(clazz: Class<*>): Map<String, Field> {
@@ -104,31 +135,152 @@ class ExecutionDAG(tasks: List<Task>, edges: List<TaskEdge>) {
     }
 }
 
-@Component
-class TaskScheduler {
-    // 并发和协程
-    fun schedule(ctx: TaskContext) = runBlocking {
-        launch {
-            while (true) {
-                val tasks = ctx.dag.loadRunnableTasks()
-                tasks.map {
-                    async { it.run(ctx) }
-                }.forEach { it.await() }
 
-                if (ctx.dag.findNextTasks().isEmpty()) {
-                    return@launch
-                }
+@Component
+class TaskExecutor {
+    private val monitor = TaskMonitor()
+
+    suspend fun execute(ctx: TaskContext) {
+        monitor.startListener(ctx)
+        ctx.firstsTasks().forEach {
+            monitor.monitor(it, ctx)
+        }
+    }
+
+}
+
+class TaskMonitor {
+    private val logger = LoggerFactory.getLogger(this.javaClass.name)
+
+    private val waitingTasks = CopyOnWriteArrayList<ExecutionTask>()
+    private val completedTasks = CopyOnWriteArrayList<ExecutionTask>()
+    private val jobCoroutineMap = ConcurrentHashMap<ExecutionTask, Job>()
+    private val nextTaskChannel = Channel<ExecutionTask>()
+    private val mutex = Mutex()
+
+    private suspend fun notifyStart(task: ExecutionTask) {
+        jobCoroutineMap[task]?.let {
+            if (!it.isCompleted && !it.isActive) {
+                it.start()
+                it.join()
+            } else {
+                return
+            }
+        }
+        notifyNext(task)
+    }
+
+    private suspend fun notifyNext(task: ExecutionTask) {
+        mutex.withLock {
+            completedTasks.add(task)
+            nextTaskChannel.send(task)
+        }
+    }
+
+    suspend fun startListener(ctx: TaskContext) {
+        ctx.launch {
+            while (true) {
+                val task = nextTaskChannel.receive()
+                val nextTasks = ctx.loadNextExecutionActions(task.action).union(waitingTasks)
+                nextTasks.forEach { monitor(it, ctx) }
             }
         }
     }
+
+    private fun cleanUpAll() {
+        waitingTasks.clear()
+        completedTasks.clear()
+        jobCoroutineMap.clear()
+        nextTaskChannel.close()
+        if (mutex.isLocked) mutex.unlock()
+    }
+
+    fun monitor(task: ExecutionTask, ctx: TaskContext) {
+        ctx.launch wrap@{
+            mutex.withLock {
+                waitingTasks.addIfAbsent(task)
+                val previous = ctx.previousTasks(task)
+                val previousJobs = jobCoroutineMap.filter { previous.contains(it.key) }
+                if (previousJobs.size < previous.size) {
+                    return@wrap
+                }
+                previousJobs.forEach {
+                    if (!it.value.isCompleted) {
+                        return@wrap
+                    }
+                }
+            }
+
+            val job = buildJob(ctx, task)
+            jobCoroutineMap.putIfAbsent(task, job)
+            waitingTasks.remove(task)
+            notifyStart(task)
+        }
+    }
+
+    private fun buildJob(
+        ctx: TaskContext,
+        task: ExecutionTask
+    ): Job {
+        val job = ctx.launch(start = CoroutineStart.LAZY) {
+            // 任务之间的关联，task1 --> task2，如何进行关联
+            val timer = measureTimeMillis {
+                kotlin.runCatching {
+                    task.action.run(ctx)
+                }.onFailure {
+                    logger.info("Error occur when execute task... $it")
+                    cleanUpAll()
+                    cancel()
+                    return@launch
+                }
+            }
+            logger.info("Task [${task.task.action.templateName}] execution successful, cost $timer millis")
+        }
+        return job
+    }
+
 }
 
 
-
 class TaskContext(
-    val graphService: GraphService,
-    val template: SimpMessagingTemplate,
-    val dag: ExecutionDAG
-) {
+    private val graphService: GraphService,
+    private val template: SimpMessagingTemplate,
+    private val dag: ExecutionDAG,
+) : CoroutineScope {
+    // connect two different tasks, the previous output as an input of next Action
 
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Default
+
+    fun getService(): GraphService {
+        return this.graphService
+    }
+
+    fun getMessagingHandler(): SimpMessagingTemplate {
+        return this.template
+    }
+
+    fun firstsTasks(): List<ExecutionTask> {
+        return dag.getFirstTasks();
+    }
+
+    fun previousTasks(task: ExecutionTask): List<ExecutionTask> {
+        return dag.findPreviousTasks(task)
+    }
+
+    fun currentTask(action: Action): ExecutionTask {
+        return dag.findTaskByAction(action)!!
+    }
+
+    fun loadNextExecutionActions(action: Action): List<ExecutionTask> {
+        return dag.findNextTasks(currentTask(action))
+    }
+
+    fun receive(): Any {
+        return 1
+    }
+
+    fun next(value: Any) {
+        println(value)
+    }
 }

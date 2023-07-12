@@ -5,8 +5,12 @@ project: flooow-api
 
 - [ ] support CRUD for action or node by websocket
 - [ ] support action status synchronization
-- [ ] optimize task execution process, run task one by one
+- [X] optimize task execution process, run task one by one
 - [X] support graph execution
+- [ ] support save&load action options
+
+## Optimize
+- [ ] enhance the graph structure algorithm, make it support distinguish if there are two graph or have circle
 
 ## Bug Fix
 
