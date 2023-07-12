@@ -34,7 +34,7 @@ class GraphExecutionService(
     private val taskExecutor: TaskExecutor
 ) {
 
-    fun execute(graphId: String) = runBlocking {
+    fun execute(graphId: String) {
         val graphData = graphService.getGraphData()
         val executionDAG = buildGraph(graphData)
         val context = TaskContext(graphService, template, executionDAG)
@@ -88,11 +88,7 @@ class ExecutionDAG(tasks: List<Task>, edges: List<TaskEdge>) {
         return loadTasks(dag.getFirsts())
     }
 
-    fun loadTask(task: Task): ExecutionTask {
-        return buildExecutionTask(task)
-    }
-
-    fun loadTasks(tasks: List<Task>): List<ExecutionTask> {
+    private fun loadTasks(tasks: List<Task>): List<ExecutionTask> {
         return tasks.map { buildExecutionTask(it) }
     }
 
@@ -133,18 +129,30 @@ class ExecutionDAG(tasks: List<Task>, edges: List<TaskEdge>) {
             it.isAnnotationPresent(ActionOption::class.java)
         }.associateBy { it.getAnnotation(ActionOption::class.java).name }
     }
+
+    fun getLastTasks(): List<ExecutionTask> {
+        val tasks = dag.getLasts()
+        val cache = tasksCache.filter { tasks.contains(it.task) }
+        if (cache.isNotEmpty()) {
+            return cache
+        }
+        return loadTasks(tasks)
+    }
 }
 
 
 @Component
 class TaskExecutor {
-    private val monitor = TaskMonitor()
 
-    suspend fun execute(ctx: TaskContext) {
-        monitor.startListener(ctx)
+    fun execute(ctx: TaskContext) = runBlocking {
+        val monitor = TaskMonitor()
+        val listener = monitor.startListener(ctx) {
+            it.cleanUpAll()
+        }
         ctx.firstsTasks().forEach {
             monitor.monitor(it, ctx)
         }
+        listener.join()
     }
 
 }
@@ -177,22 +185,25 @@ class TaskMonitor {
         }
     }
 
-    suspend fun startListener(ctx: TaskContext) {
-        ctx.launch {
+    suspend fun startListener(ctx: TaskContext, post: ((monitor: TaskMonitor) -> Unit)?): Job {
+        return ctx.launch {
             while (true) {
                 val task = nextTaskChannel.receive()
                 val nextTasks = ctx.loadNextExecutionActions(task.action).union(waitingTasks)
+                if (nextTasks.isEmpty() && completedTasks.containsAll(ctx.lastsTasks())) {
+                    break
+                }
                 nextTasks.forEach { monitor(it, ctx) }
             }
+            post?.invoke(this@TaskMonitor)
         }
     }
 
-    private fun cleanUpAll() {
+    fun cleanUpAll() {
         waitingTasks.clear()
         completedTasks.clear()
         jobCoroutineMap.clear()
         nextTaskChannel.close()
-        if (mutex.isLocked) mutex.unlock()
     }
 
     fun monitor(task: ExecutionTask, ctx: TaskContext) {
@@ -248,9 +259,10 @@ class TaskContext(
     private val dag: ExecutionDAG,
 ) : CoroutineScope {
     // connect two different tasks, the previous output as an input of next Action
+    private val messageChannel = Channel<Pair<Action, Any>>()
 
     override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Default
+        get() = Dispatchers.Default + Job()
 
     fun getService(): GraphService {
         return this.graphService
@@ -262,6 +274,10 @@ class TaskContext(
 
     fun firstsTasks(): List<ExecutionTask> {
         return dag.getFirstTasks();
+    }
+
+    fun lastsTasks(): List<ExecutionTask> {
+        return dag.getLastTasks()
     }
 
     fun previousTasks(task: ExecutionTask): List<ExecutionTask> {

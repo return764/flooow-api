@@ -44,4 +44,14 @@ class DirectedAcyclicGraph<Node> {
         }.keys.toList()
     }
 
+    fun getLasts(): List<Node> {
+        return graph.filter {
+            it.value.isEmpty()
+        }.keys.toList()
+    }
+
+    fun tasks(): List<Node> {
+        return graph.keys.toList()
+    }
+
 }
