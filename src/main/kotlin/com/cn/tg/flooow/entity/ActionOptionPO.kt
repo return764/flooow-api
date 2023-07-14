@@ -1,8 +1,11 @@
 package com.cn.tg.flooow.entity
 
 import com.cn.tg.flooow.entity.vo.ActionOptionVO
+import com.cn.tg.flooow.entity.vo.OptionInputType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
@@ -19,6 +22,9 @@ data class ActionOptionPO(
     val nodeId: String,
     @Column(name = "key")
     val key: String,
+    @Column(name = "input_type")
+    @Enumerated(EnumType.STRING)
+    val inputType: OptionInputType,
     @Column(name = "value")
     val value: String,
     @Column(name = "type")
@@ -32,6 +38,7 @@ data class ActionOptionPO(
         return ActionOptionVO(
             id = id!!,
             label = key,
+            inputType = inputType,
             type = type,
             value = value
         )

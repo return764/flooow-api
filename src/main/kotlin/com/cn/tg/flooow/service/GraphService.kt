@@ -8,6 +8,7 @@ import com.cn.tg.flooow.entity.vo.ActionVO
 import com.cn.tg.flooow.repository.ActionRepository
 import com.cn.tg.flooow.model.Edge
 import com.cn.tg.flooow.entity.vo.GraphDataVO
+import com.cn.tg.flooow.entity.vo.OptionInputType
 import com.cn.tg.flooow.entity.vo.MoveNodeEvent
 import com.cn.tg.flooow.model.Node
 import com.cn.tg.flooow.repository.ActionOptionRepository
@@ -18,7 +19,6 @@ import com.cn.tg.flooow.repository.NodeRepository
 import com.cn.tg.flooow.repository.PortRepository
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
-import java.util.HashMap
 
 @Service
 class GraphService(
@@ -62,7 +62,7 @@ class GraphService(
     fun addNode(node: Node): Node {
         with(node) {
             nodeRepository.save(toPO())
-            val template = actionTemplateRepository.findByTemplateName(data.get("template"))
+            val template = actionTemplateRepository.findByTemplateName(data["template"])
             val action = actionRepository.save(toActionPO(template))
             portRepository.saveAll(buildPortsPOs())
             val templateOptions = actionTemplateOptionRepository.findAllByTemplateId(template?.id)
@@ -75,6 +75,7 @@ class GraphService(
                     key = it.key,
                     value = value ?: it.defaultValue,
                     type = it.type,
+                    inputType = OptionInputType.DEFAULT,
                     visible = it.visible
                 )
             }.let { actionOptionRepository.saveAll(it) }
@@ -153,11 +154,13 @@ class GraphService(
         return true
     }
 
-    fun updateActionOptions(nodeId: String, data: HashMap<String, String>): List<ActionOptionVO> {
+    fun updateActionOptions(nodeId: String, listActionOptions: List<ActionOptionVO>): List<ActionOptionVO> {
         val actionOptions = actionOptionRepository.findAllByNodeId(nodeId)
+        val mappedActionOptions = listActionOptions.associateBy { it.id }
         val changedActionOptions = actionOptions.map {
             it.copy(
-                value = data[it.key] ?: it.value
+                inputType = mappedActionOptions[it.id]?.inputType ?: it.inputType,
+                value = mappedActionOptions[it.id]?.value ?: it.value
             )
         }
         return actionOptionRepository.saveAll(changedActionOptions).map { it.toVO() }
