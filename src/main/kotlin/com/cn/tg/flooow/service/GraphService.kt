@@ -18,6 +18,7 @@ import com.cn.tg.flooow.repository.NodeRepository
 import com.cn.tg.flooow.repository.PortRepository
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
+import java.util.HashMap
 
 @Service
 class GraphService(
@@ -118,8 +119,8 @@ class GraphService(
         return event
     }
 
-    fun getActionOptions(id: String): List<ActionOptionVO> {
-       return actionOptionRepository.findAllByNodeId(id)
+    fun getActionOptions(nodeId: String): List<ActionOptionVO> {
+       return actionOptionRepository.findAllByNodeId(nodeId)
            .filter { it.visible }
            .filter { !it.isDeleted }
            .map { it.toVO() }
@@ -150,5 +151,15 @@ class GraphService(
             edgeRepository.save(it.copy(isDeleted = true))
         }
         return true
+    }
+
+    fun updateActionOptions(nodeId: String, data: HashMap<String, String>): List<ActionOptionVO> {
+        val actionOptions = actionOptionRepository.findAllByNodeId(nodeId)
+        val changedActionOptions = actionOptions.map {
+            it.copy(
+                value = data[it.key] ?: it.value
+            )
+        }
+        return actionOptionRepository.saveAll(changedActionOptions).map { it.toVO() }
     }
 }
