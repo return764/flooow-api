@@ -60,14 +60,13 @@ class GraphService(
 
     @Transactional
     fun addNode(node: Node): Node {
-        with(node) {
-            nodeRepository.save(toPO(data["label"]))
+        return with(node) {
             val template = actionTemplateRepository.findByTemplateName(data["template"])
             val action = actionRepository.save(toActionPO(template))
-            portRepository.saveAll(buildPortsPOs())
+            val ports = portRepository.saveAll(buildPortsPOs())
             val templateOptions = actionTemplateOptionRepository.findAllByTemplateId(template?.id)
 
-            templateOptions.map {
+            val options = templateOptions.map {
                 val value = data[it.key]
                 ActionOptionPO(
                     actionId = action.id!!,
@@ -79,9 +78,8 @@ class GraphService(
                     visible = it.visible
                 )
             }.let { actionOptionRepository.saveAll(it) }
+            nodeRepository.save(toPO(data["label"])).toModel(ports, options)
         }
-
-        return node
     }
 
     fun addEdge(edge: Edge): Edge {
