@@ -9,6 +9,7 @@ import com.cn.tg.flooow.model.action.ActionStatus
 data class Node(
     val id: String,
     val shape: String,
+    val name: String?,
     val x: Int,
     val y: Int,
     val height: Int?,
@@ -16,15 +17,20 @@ data class Node(
     val ports: Port,
     val data: Map<String, String>,
 ) {
-    fun toPO(): NodePO {
+    fun toPO(label: String?): NodePO {
         return NodePO(
             id = id,
+            name = name ?: generateName(label),
             shape = shape,
             x = x,
             y = y,
             height = height,
             width = width
         )
+    }
+
+    private fun generateName(label: String?): String {
+        return "$label-${id.slice(0..4)}"
     }
 
     fun toActionPO(template: ActionTemplatePO?): ActionPO {

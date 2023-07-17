@@ -13,6 +13,8 @@ data class NodePO (
     val id: String,
     @Column(name = "shape")
     val shape: String,
+    @Column(name = "name")
+    val name: String,
     @Column(name = "x")
     val x: Int,
     @Column(name = "y")
@@ -28,6 +30,7 @@ data class NodePO (
         return Node(
             id = id,
             shape = shape,
+            name = name,
             x = x,
             y = y,
             width = width,

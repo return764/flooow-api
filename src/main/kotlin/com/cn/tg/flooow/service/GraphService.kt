@@ -61,7 +61,7 @@ class GraphService(
     @Transactional
     fun addNode(node: Node): Node {
         with(node) {
-            nodeRepository.save(toPO())
+            nodeRepository.save(toPO(data["label"]))
             val template = actionTemplateRepository.findByTemplateName(data["template"])
             val action = actionRepository.save(toActionPO(template))
             portRepository.saveAll(buildPortsPOs())
