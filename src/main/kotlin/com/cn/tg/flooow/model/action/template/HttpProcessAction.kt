@@ -12,7 +12,10 @@ class HttpProcessAction: Action {
     @ActionOption(name = "method", defaultValue = "GET")
     private lateinit var method: String
 
+    @ActionOption(name = "url", defaultValue = "")
+    private lateinit var url: String
+
     override fun run(ctx: TaskContext) {
-        println("HTTP Request: $method")
+        println("HTTP Request: $method $url")
     }
 }

@@ -13,6 +13,7 @@ class ConstantProviderAction: Action {
 
     override fun run(ctx: TaskContext) {
         println("Constant Input:$value")
+        ctx.returnValue(this, value)
     }
 
 }

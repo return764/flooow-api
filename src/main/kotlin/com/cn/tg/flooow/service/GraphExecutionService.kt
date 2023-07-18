@@ -3,10 +3,12 @@ package com.cn.tg.flooow.service
 import com.cn.tg.flooow.entity.vo.ActionOptionVO
 import com.cn.tg.flooow.entity.vo.ActionVO
 import com.cn.tg.flooow.entity.vo.GraphDataVO
+import com.cn.tg.flooow.entity.vo.OptionInputType
 import com.cn.tg.flooow.model.Node
 import com.cn.tg.flooow.model.action.Action
 import com.cn.tg.flooow.model.action.annotation.ActionOption
 import com.cn.tg.flooow.model.dag.DirectedAcyclicGraph
+import com.cn.tg.flooow.utils.ReflectUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -20,7 +22,6 @@ import kotlinx.coroutines.sync.withLock
 import org.slf4j.LoggerFactory
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Component
-import java.lang.reflect.Field
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.coroutines.CoroutineContext
@@ -95,11 +96,6 @@ class ExecutionDAG(tasks: List<Task>, edges: List<TaskEdge>) {
     private fun buildExecutionTask(t: Task): ExecutionTask {
         val clazz = Class.forName(t.action.className)
         val task = clazz.getDeclaredConstructor().newInstance() as Action
-        val optionName2Field = getDeclaredFieldWithActionMarker(task.javaClass)
-        t.options.forEach {
-            optionName2Field[it.label]?.trySetAccessible()
-            optionName2Field[it.label]?.set(task, it.value)
-        }
         return ExecutionTask(t, task).also { tasksCache.add(it) }
     }
 
@@ -122,12 +118,6 @@ class ExecutionDAG(tasks: List<Task>, edges: List<TaskEdge>) {
 
     fun findTaskByAction(action: Action): ExecutionTask? {
         return tasksCache.find { it.action == action }
-    }
-
-    private fun getDeclaredFieldWithActionMarker(clazz: Class<*>): Map<String, Field> {
-        return clazz.declaredFields.filter {
-            it.isAnnotationPresent(ActionOption::class.java)
-        }.associateBy { it.getAnnotation(ActionOption::class.java).name }
     }
 
     fun getLastTasks(): List<ExecutionTask> {
@@ -234,7 +224,19 @@ class TaskMonitor {
         task: ExecutionTask
     ): Job {
         val job = ctx.launch(start = CoroutineStart.LAZY) {
-            // 任务之间的关联，task1 --> task2，如何进行关联
+            val optionName2Field = ReflectUtils.getDeclaredFieldWithAnnotation(task.action.javaClass, ActionOption::class.java)
+                .let { it.associateBy { field -> field.getAnnotation(ActionOption::class.java).name } }
+            val runtimeInputMap = ctx.receiveValue(task.action).map { item -> item.key.task.node.id to item.value }.toMap()
+            task.task.options.forEach {
+                optionName2Field[it.label]?.trySetAccessible()
+                if (it.inputType == OptionInputType.DEFAULT) {
+                    optionName2Field[it.label]?.set(task.action, it.value)
+                }
+                if (it.inputType == OptionInputType.LAST_INPUT) {
+                    optionName2Field[it.label]?.set(task.action, runtimeInputMap[it.value])
+                }
+            }
+
             val timer = measureTimeMillis {
                 kotlin.runCatching {
                     task.action.run(ctx)
@@ -258,11 +260,11 @@ class TaskContext(
     private val template: SimpMessagingTemplate,
     private val dag: ExecutionDAG,
 ) : CoroutineScope {
-    // connect two different tasks, the previous output as an input of next Action
-    private val messageChannel = Channel<Pair<Action, Any>>()
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Default + Job()
+
+    private val taskRuntimeResultStore = ConcurrentHashMap<ExecutionTask, String>()
 
     fun getService(): GraphService {
         return this.graphService
@@ -273,7 +275,7 @@ class TaskContext(
     }
 
     fun firstsTasks(): List<ExecutionTask> {
-        return dag.getFirstTasks();
+        return dag.getFirstTasks()
     }
 
     fun lastsTasks(): List<ExecutionTask> {
@@ -292,11 +294,11 @@ class TaskContext(
         return dag.findNextTasks(currentTask(action))
     }
 
-    fun receive(): Any {
-        return 1
+    fun receiveValue(action: Action): Map<ExecutionTask, String> {
+        return previousTasks(currentTask(action)).associateWith { taskRuntimeResultStore[it].orEmpty() }
     }
 
-    fun next(value: Any) {
-        println(value)
+    fun returnValue(action: Action, value: String) {
+        taskRuntimeResultStore[currentTask(action)] = value
     }
 }
