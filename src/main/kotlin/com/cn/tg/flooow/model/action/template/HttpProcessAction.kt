@@ -4,6 +4,9 @@ import com.cn.tg.flooow.model.action.Action
 import com.cn.tg.flooow.model.action.annotation.ActionMarker
 import com.cn.tg.flooow.model.action.annotation.ActionOption
 import com.cn.tg.flooow.service.TaskContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 
 
 @ActionMarker(type = "process", name = "http", shape = "process", label="HTTP Request")
@@ -16,6 +19,40 @@ class HttpProcessAction: Action {
     private lateinit var url: String
 
     override fun run(ctx: TaskContext) {
-        println("HTTP Request: $method $url")
+        val messageHandler = ctx.getMessagingHandler()
+        val current = ctx.currentTask(this)
+        messageHandler.convertAndSend("/queue/graph/runtime/mock-id",
+            "",
+            mapOf(
+                "status" to "start",
+                "node-id" to current.task.node.id
+            ))
+        val client = OkHttpClient()
+        val requestBuilder = Request.Builder().url(url)
+        if (method == "GET") {
+            requestBuilder.get()
+        } else if (method == "POST") {
+            requestBuilder.post("".toRequestBody())
+        }
+        val response = client.newCall(requestBuilder.build()).execute()
+
+        if (response.isSuccessful) {
+            messageHandler.convertAndSend("/queue/graph/runtime/mock-id",
+                response.body?.byteString() ?: "",
+                mapOf(
+                    "status" to "success",
+                    "node-id" to current.task.node.id
+                ))
+            return
+        }
+        if (response.code > 400) {
+            messageHandler.convertAndSend("/queue/graph/runtime/mock-id",
+                response.body?.byteString() ?: "",
+                mapOf(
+                    "status" to "failed",
+                    "node-id" to current.task.node.id
+                ))
+            return
+        }
     }
 }

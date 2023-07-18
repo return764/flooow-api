@@ -183,6 +183,7 @@ class TaskMonitor(private val optionFillingHandler: ActionOptionFillingHandlers)
                 }
                 nextTasks.forEach { monitor(it, ctx) }
             }
+            nextTaskChannel.close()
             post?.invoke(this@TaskMonitor)
         }
     }
@@ -191,7 +192,6 @@ class TaskMonitor(private val optionFillingHandler: ActionOptionFillingHandlers)
         waitingTasks.clear()
         completedTasks.clear()
         jobCoroutineMap.clear()
-        nextTaskChannel.close()
     }
 
     fun monitor(task: ExecutionTask, ctx: TaskContext) {

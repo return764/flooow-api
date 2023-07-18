@@ -12,7 +12,6 @@ class ConstantProviderAction: Action {
     private lateinit var value: String
 
     override fun run(ctx: TaskContext) {
-        println("Constant Input:$value")
         ctx.returnValue(this, value)
     }
 

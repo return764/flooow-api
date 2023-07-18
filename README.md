@@ -13,6 +13,8 @@ project: flooow-api
 - [X] support save&load action options
 - [X] support option input type
 - [X] support build task in runtime with input type
+- [ ] support task runtime message transform
+- [ ] support task runtime error handler
 
 ## Optimize
 - [X] refactor option field autofill logic
