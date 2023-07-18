@@ -3,12 +3,10 @@ package com.cn.tg.flooow.service
 import com.cn.tg.flooow.entity.vo.ActionOptionVO
 import com.cn.tg.flooow.entity.vo.ActionVO
 import com.cn.tg.flooow.entity.vo.GraphDataVO
-import com.cn.tg.flooow.entity.vo.OptionInputType
 import com.cn.tg.flooow.model.Node
 import com.cn.tg.flooow.model.action.Action
-import com.cn.tg.flooow.model.action.annotation.ActionOption
 import com.cn.tg.flooow.model.dag.DirectedAcyclicGraph
-import com.cn.tg.flooow.utils.ReflectUtils
+import com.cn.tg.flooow.service.handler.ActionOptionFillingHandlers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -132,10 +130,10 @@ class ExecutionDAG(tasks: List<Task>, edges: List<TaskEdge>) {
 
 
 @Component
-class TaskExecutor {
+class TaskExecutor(private val optionHandlers: ActionOptionFillingHandlers) {
 
     fun execute(ctx: TaskContext) = runBlocking {
-        val monitor = TaskMonitor()
+        val monitor = TaskMonitor(optionHandlers)
         val listener = monitor.startListener(ctx) {
             it.cleanUpAll()
         }
@@ -147,7 +145,7 @@ class TaskExecutor {
 
 }
 
-class TaskMonitor {
+class TaskMonitor(private val optionFillingHandler: ActionOptionFillingHandlers) {
     private val logger = LoggerFactory.getLogger(this.javaClass.name)
 
     private val waitingTasks = CopyOnWriteArrayList<ExecutionTask>()
@@ -224,18 +222,7 @@ class TaskMonitor {
         task: ExecutionTask
     ): Job {
         val job = ctx.launch(start = CoroutineStart.LAZY) {
-            val optionName2Field = ReflectUtils.getDeclaredFieldWithAnnotation(task.action.javaClass, ActionOption::class.java)
-                .let { it.associateBy { field -> field.getAnnotation(ActionOption::class.java).name } }
-            val runtimeInputMap = ctx.receiveValue(task.action).map { item -> item.key.task.node.id to item.value }.toMap()
-            task.task.options.forEach {
-                optionName2Field[it.label]?.trySetAccessible()
-                if (it.inputType == OptionInputType.DEFAULT) {
-                    optionName2Field[it.label]?.set(task.action, it.value)
-                }
-                if (it.inputType == OptionInputType.LAST_OUTPUT) {
-                    optionName2Field[it.label]?.set(task.action, runtimeInputMap[it.value])
-                }
-            }
+            optionFillingHandler.apply(ctx, task)
 
             val timer = measureTimeMillis {
                 kotlin.runCatching {

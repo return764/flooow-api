@@ -15,6 +15,7 @@ project: flooow-api
 - [X] support build task in runtime with input type
 
 ## Optimize
+- [X] refactor option field autofill logic
 - [ ] enhance the graph structure algorithm, make it support distinguish if there are two graph or have circle
 
 ## Bug Fix
