@@ -2,7 +2,7 @@ package com.cn.tg.flooow.entity.vo
 
 enum class OptionInputType {
     DEFAULT,
-    LAST_INPUT,
+    LAST_OUTPUT,
 }
 
 data class ActionOptionVO(

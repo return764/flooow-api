@@ -232,7 +232,7 @@ class TaskMonitor {
                 if (it.inputType == OptionInputType.DEFAULT) {
                     optionName2Field[it.label]?.set(task.action, it.value)
                 }
-                if (it.inputType == OptionInputType.LAST_INPUT) {
+                if (it.inputType == OptionInputType.LAST_OUTPUT) {
                     optionName2Field[it.label]?.set(task.action, runtimeInputMap[it.value])
                 }
             }
