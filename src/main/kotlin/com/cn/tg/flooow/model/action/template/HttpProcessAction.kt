@@ -21,12 +21,11 @@ class HttpProcessAction: Action {
     override fun run(ctx: TaskContext) {
         val messageHandler = ctx.getMessagingHandler()
         val current = ctx.currentTask(this)
-        messageHandler.convertAndSend("/queue/graph/runtime/mock-id",
-            "",
-            mapOf(
-                "status" to "start",
-                "node-id" to current.task.node.id
-            ))
+        messageHandler.builder()
+            .destination("/queue/graph/runtime/mock-id")
+            .header("status", "start")
+            .header("node-id", current.task.node.id)
+            .send()
         val client = OkHttpClient()
         val requestBuilder = Request.Builder().url(url)
         if (method == "GET") {
@@ -35,23 +34,22 @@ class HttpProcessAction: Action {
             requestBuilder.post("".toRequestBody())
         }
         val response = client.newCall(requestBuilder.build()).execute()
-
+        val body = response.body?.string()
         if (response.isSuccessful) {
-            messageHandler.convertAndSend("/queue/graph/runtime/mock-id",
-                response.body?.byteString() ?: "",
-                mapOf(
-                    "status" to "success",
-                    "node-id" to current.task.node.id
-                ))
+            messageHandler.builder()
+                .destination("/queue/graph/runtime/mock-id")
+                .header("status", "success")
+                .header("node-id", current.task.node.id)
+                .send()
+            ctx.returnValue(this, body ?: "")
             return
         }
         if (response.code > 400) {
-            messageHandler.convertAndSend("/queue/graph/runtime/mock-id",
-                response.body?.byteString() ?: "",
-                mapOf(
-                    "status" to "failed",
-                    "node-id" to current.task.node.id
-                ))
+            messageHandler.builder()
+                .destination("/queue/graph/runtime/mock-id")
+                .header("status", "failed")
+                .header("node-id", current.task.node.id)
+                .send()
             return
         }
     }

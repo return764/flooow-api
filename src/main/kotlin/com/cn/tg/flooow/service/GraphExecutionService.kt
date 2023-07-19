@@ -18,7 +18,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.slf4j.LoggerFactory
-import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Component
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
@@ -29,7 +28,7 @@ import kotlin.system.measureTimeMillis
 @Component
 class GraphExecutionService(
     private val graphService: GraphService,
-    private val template: SimpMessagingTemplate,
+    private val template: MessageHandler,
     private val taskExecutor: TaskExecutor
 ) {
 
@@ -141,6 +140,7 @@ class TaskExecutor(private val optionHandlers: ActionOptionFillingHandlers) {
             monitor.monitor(it, ctx)
         }
         listener.join()
+
     }
 
 }
@@ -244,7 +244,7 @@ class TaskMonitor(private val optionFillingHandler: ActionOptionFillingHandlers)
 
 class TaskContext(
     private val graphService: GraphService,
-    private val template: SimpMessagingTemplate,
+    private val template: MessageHandler,
     private val dag: ExecutionDAG,
 ) : CoroutineScope {
 
@@ -257,7 +257,7 @@ class TaskContext(
         return this.graphService
     }
 
-    fun getMessagingHandler(): SimpMessagingTemplate {
+    fun getMessagingHandler(): MessageHandler {
         return this.template
     }
 
