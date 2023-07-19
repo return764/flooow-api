@@ -8,7 +8,7 @@ import com.cn.tg.flooow.entity.vo.ActionVO
 import com.cn.tg.flooow.repository.ActionRepository
 import com.cn.tg.flooow.model.Edge
 import com.cn.tg.flooow.entity.vo.GraphDataVO
-import com.cn.tg.flooow.entity.vo.OptionInputType
+import com.cn.tg.flooow.enums.OptionInputType
 import com.cn.tg.flooow.entity.vo.MoveNodeEvent
 import com.cn.tg.flooow.model.Node
 import com.cn.tg.flooow.repository.ActionOptionRepository

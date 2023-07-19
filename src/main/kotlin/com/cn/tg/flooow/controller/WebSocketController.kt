@@ -1,6 +1,7 @@
 package com.cn.tg.flooow.controller
 
 import com.cn.tg.flooow.entity.vo.MoveNodeEvent
+import com.cn.tg.flooow.enums.ReturnType
 import com.cn.tg.flooow.model.Edge
 import com.cn.tg.flooow.model.Node
 import com.cn.tg.flooow.service.GraphExecutionService
@@ -22,7 +23,7 @@ class WebSocketController(
         template.builder()
             .destination("/queue/graph/$graphId")
             .payload(graphService.addNode(node))
-            .returnType("CREATE_NODE")
+            .returnType(ReturnType.CREATE_NODE)
             .send()
     }
 
@@ -31,7 +32,7 @@ class WebSocketController(
         template.builder()
             .destination("/queue/graph/$graphId")
             .payload(graphService.addEdge(edge))
-            .returnType("CREATE_EDGE")
+            .returnType(ReturnType.CREATE_EDGE)
             .send()
     }
 
@@ -40,7 +41,7 @@ class WebSocketController(
         template.builder()
             .destination("/queue/graph/$graphId")
             .payload(graphService.moveNode(event))
-            .returnType("MOVE_NODE")
+            .returnType(ReturnType.MOVE_NODE)
             .send()
     }
 
@@ -49,7 +50,7 @@ class WebSocketController(
         template.builder()
             .destination("/queue/graph/$graphId")
             .payload(graphService.deleteNode(nodeId))
-            .returnType("DELETE_NODE")
+            .returnType(ReturnType.DELETE_NODE)
             .send()
     }
 
@@ -58,7 +59,7 @@ class WebSocketController(
         template.builder()
             .destination("/queue/graph/$graphId")
             .payload(graphService.deleteEdge(edgeId))
-            .returnType("DELETE_EDGE")
+            .returnType(ReturnType.DELETE_EDGE)
             .send()
     }
 
@@ -67,7 +68,7 @@ class WebSocketController(
         template.builder()
             .destination("/queue/graph/$graphId")
             .payload(graphExecutionService.execute(graphId))
-            .returnType("EXECUTION")
+            .returnType(ReturnType.EXECUTION)
             .send()
     }
 }

@@ -1,9 +1,6 @@
 package com.cn.tg.flooow.entity.vo
 
-enum class OptionInputType {
-    DEFAULT,
-    LAST_OUTPUT,
-}
+import com.cn.tg.flooow.enums.OptionInputType
 
 data class ActionOptionVO(
     val id: String,

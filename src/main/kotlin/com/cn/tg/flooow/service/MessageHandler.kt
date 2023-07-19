@@ -1,5 +1,6 @@
 package com.cn.tg.flooow.service
 
+import com.cn.tg.flooow.enums.ReturnType
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Component
 
@@ -43,7 +44,7 @@ class MessageHandler(
             return this
         }
 
-        fun returnType(type: String): MessageBuilder {
+        fun returnType(type: ReturnType): MessageBuilder {
             return header(RETURN_TYPE, type)
         }
 
