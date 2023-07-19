@@ -4,7 +4,6 @@ import com.cn.tg.flooow.model.action.AbstractAction
 import com.cn.tg.flooow.model.action.Action
 import com.cn.tg.flooow.model.action.annotation.ActionMarker
 import com.cn.tg.flooow.model.action.annotation.ActionOption
-import com.cn.tg.flooow.service.TaskContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -19,7 +18,7 @@ class HttpProcessAction: AbstractAction(), Action {
     @ActionOption(name = "url", defaultValue = "")
     private lateinit var url: String
 
-    override fun run(ctx: TaskContext) {
+    override fun run() {
         val messageHandler = ctx.getMessagingHandler()
         val current = current()
         println(current)

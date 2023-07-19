@@ -1,6 +1,6 @@
 package com.cn.tg.flooow.entity
 
-import com.cn.tg.flooow.model.action.ActionStatus
+import com.cn.tg.flooow.enums.ActionStatus
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType

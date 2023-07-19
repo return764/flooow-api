@@ -225,7 +225,7 @@ class TaskMonitor(private val optionFillingHandler: ActionOptionFillingHandlers)
 
             val timer = measureTimeMillis {
                 kotlin.runCatching {
-                    task.action.bind(ctx).run(ctx)
+                    task.action.bind(ctx).run()
                 }.onFailure {
                     logger.info("Error occur when execute task... $it")
                     cleanUpAll()

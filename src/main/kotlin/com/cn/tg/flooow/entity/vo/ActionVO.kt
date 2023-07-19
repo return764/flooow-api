@@ -1,6 +1,6 @@
 package com.cn.tg.flooow.entity.vo
 
-import com.cn.tg.flooow.model.action.ActionStatus
+import com.cn.tg.flooow.enums.ActionStatus
 
 data class ActionVO(
     val id: String,

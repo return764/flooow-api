@@ -1,4 +1,4 @@
-package com.cn.tg.flooow.model.action
+package com.cn.tg.flooow.enums
 
 enum class ActionStatus {
     NEW,

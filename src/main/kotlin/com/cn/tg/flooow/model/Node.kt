@@ -4,7 +4,7 @@ import com.cn.tg.flooow.entity.ActionPO
 import com.cn.tg.flooow.entity.ActionTemplatePO
 import com.cn.tg.flooow.entity.NodePO
 import com.cn.tg.flooow.entity.PortPO
-import com.cn.tg.flooow.model.action.ActionStatus
+import com.cn.tg.flooow.enums.ActionStatus
 
 data class Node(
     val id: String,
