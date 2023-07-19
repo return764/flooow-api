@@ -20,6 +20,7 @@ project: flooow-api
 - [X] refactor option field autofill logic
 - [ ] refactor MessageHandler
 - [ ] enhance the graph structure algorithm, make it support distinguish if there are two graph or have circle
+- [ ] extract AbstractAction
 
 ## Bug Fix
 

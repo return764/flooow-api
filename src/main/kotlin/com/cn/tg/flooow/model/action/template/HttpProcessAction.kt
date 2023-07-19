@@ -1,5 +1,6 @@
 package com.cn.tg.flooow.model.action.template
 
+import com.cn.tg.flooow.model.action.AbstractAction
 import com.cn.tg.flooow.model.action.Action
 import com.cn.tg.flooow.model.action.annotation.ActionMarker
 import com.cn.tg.flooow.model.action.annotation.ActionOption
@@ -10,7 +11,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 
 
 @ActionMarker(type = "process", name = "http", shape = "process", label="HTTP Request")
-class HttpProcessAction: Action {
+class HttpProcessAction: AbstractAction(), Action {
 
     @ActionOption(name = "method", defaultValue = "GET")
     private lateinit var method: String
@@ -20,7 +21,8 @@ class HttpProcessAction: Action {
 
     override fun run(ctx: TaskContext) {
         val messageHandler = ctx.getMessagingHandler()
-        val current = ctx.currentTask(this)
+        val current = current()
+        println(current)
         messageHandler.builder()
             .destination("/queue/graph/runtime/mock-id")
             .header("status", "start")

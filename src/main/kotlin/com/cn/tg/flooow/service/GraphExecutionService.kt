@@ -70,7 +70,6 @@ data class ExecutionTask(
 class ExecutionDAG(tasks: List<Task>, edges: List<TaskEdge>) {
     // 还应该包含当前正在运行的图的id
     private val dag: DirectedAcyclicGraph<Task> = DirectedAcyclicGraph()
-
     private val tasksCache = CopyOnWriteArrayList<ExecutionTask>()
 
     init {
@@ -226,7 +225,7 @@ class TaskMonitor(private val optionFillingHandler: ActionOptionFillingHandlers)
 
             val timer = measureTimeMillis {
                 kotlin.runCatching {
-                    task.action.run(ctx)
+                    task.action.bind(ctx).run(ctx)
                 }.onFailure {
                     logger.info("Error occur when execute task... $it")
                     cleanUpAll()
