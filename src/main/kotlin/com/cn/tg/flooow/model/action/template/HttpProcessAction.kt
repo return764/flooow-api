@@ -8,6 +8,7 @@ import com.cn.tg.flooow.model.action.annotation.ActionOption
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.IOException
 
 
 @ActionMarker(type = "process", name = "http", shape = "process", label="HTTP Request")
@@ -27,14 +28,18 @@ class HttpProcessAction: AbstractAction(), Action {
         } else if (method == "POST") {
             requestBuilder.post("".toRequestBody())
         }
-        val response = client.newCall(requestBuilder.build()).execute()
-        val body = response.body?.string()
-        if (response.isSuccessful) {
-            ctx.returnValue(this, body ?: "")
-            return
-        }
-        if (response.code >= 400) {
-            throw TaskException(body ?: "")
+        try {
+            val response = client.newCall(requestBuilder.build()).execute()
+            val body = response.body?.string()
+            if (response.isSuccessful) {
+                returnValue(body)
+                return
+            }
+            if (response.code >= 400) {
+                throw TaskException(body ?: "")
+            }
+        } catch (e: IOException) {
+            throw TaskException("connect error: ${e.message}")
         }
     }
 }

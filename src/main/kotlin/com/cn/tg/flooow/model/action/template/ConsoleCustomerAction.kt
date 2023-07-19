@@ -9,6 +9,7 @@ import com.cn.tg.flooow.model.action.annotation.ActionMarker
 class ConsoleCustomerAction:AbstractAction(), Action {
 
     override fun run() {
-        println("console something ${ctx.receiveValue(this).values}")
+        println("console something ${receiveValue()}")
     }
+
 }

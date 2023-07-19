@@ -14,4 +14,10 @@ abstract class AbstractAction : Action {
     fun current(): ExecutionTask {
         return ctx.currentTask(this)
     }
+
+    fun returnValue(value: String?) {
+        ctx.returnValue(this, value ?: "")
+    }
+
+    protected fun receiveValue() = ctx.receiveValue(this).values
 }
