@@ -3,6 +3,7 @@ package com.cn.tg.flooow.service
 import com.cn.tg.flooow.entity.vo.ActionOptionVO
 import com.cn.tg.flooow.entity.vo.ActionVO
 import com.cn.tg.flooow.entity.vo.GraphDataVO
+import com.cn.tg.flooow.exceptions.TaskException
 import com.cn.tg.flooow.model.Node
 import com.cn.tg.flooow.model.action.Action
 import com.cn.tg.flooow.model.dag.DirectedAcyclicGraph
@@ -224,10 +225,27 @@ class TaskMonitor(private val optionFillingHandler: ActionOptionFillingHandlers)
             optionFillingHandler.apply(ctx, task)
 
             val timer = measureTimeMillis {
-                kotlin.runCatching {
+                try {
+                    ctx.getMessagingHandler().builder()
+                        .destination("/queue/graph/runtime/mock-id")
+                        .header("status", "start")
+                        .header("node-id", task.task.node.id)
+                        .send()
                     task.action.bind(ctx).run()
-                }.onFailure {
-                    logger.info("Error occur when execute task... $it")
+                    ctx.getMessagingHandler().builder()
+                        .destination("/queue/graph/runtime/mock-id")
+                        .header("status", "success")
+                        .header("node-id", task.task.node.id)
+                        .send()
+                } catch (e: TaskException) {
+                    ctx.getMessagingHandler().builder()
+                        .payload(e.message)
+                        .destination("/queue/graph/runtime/mock-id")
+                        .header("node-id", task.task.node.id)
+                        .header("status", "failed")
+                        .send()
+                } catch (e: RuntimeException) {
+                    logger.info("Error occur when execute task... $e")
                     cleanUpAll()
                     cancel()
                     return@launch
