@@ -3,7 +3,6 @@ package com.cn.tg.flooow.service
 import com.cn.tg.flooow.entity.vo.ActionOptionVO
 import com.cn.tg.flooow.entity.vo.ActionVO
 import com.cn.tg.flooow.entity.vo.GraphDataVO
-import com.cn.tg.flooow.exceptions.TaskException
 import com.cn.tg.flooow.model.Node
 import com.cn.tg.flooow.model.action.Action
 import com.cn.tg.flooow.model.dag.DirectedAcyclicGraph
@@ -231,9 +230,7 @@ class TaskMonitor(private val optionFillingHandler: ActionOptionFillingHandlers)
                 try {
                     task.action.bind(ctx).run()
                 } catch (e: RuntimeException) {
-                    if (e is TaskException) {
-                        taskLogger.sendFailure(e)
-                    }
+                    taskLogger.sendFailure(e)
                     logger.info("Error occur when execute task... $e")
                     cleanUpAll()
                     cancel()
