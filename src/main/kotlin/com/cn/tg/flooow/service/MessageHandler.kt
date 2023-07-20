@@ -1,5 +1,6 @@
 package com.cn.tg.flooow.service
 
+import com.cn.tg.flooow.enums.ActionStatus
 import com.cn.tg.flooow.enums.ReturnType
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Component
@@ -19,6 +20,10 @@ class MessageHandler(
 
     fun builder(): MessageBuilder {
         return MessageBuilder(this)
+    }
+
+    fun create(ctx:TaskContext, task: ExecutionTask): TaskMessageHandler {
+        return TaskMessageHandler(this, ctx, task)
     }
 
 
@@ -52,4 +57,44 @@ class MessageHandler(
             handler.sendWithHeader(destination, payload, header)
         }
     }
+}
+
+class TaskMessageHandler(
+    private val messageHandler: MessageHandler,
+    private val ctx: TaskContext,
+    private val executionTask: ExecutionTask) {
+
+    fun sendOnReady() {
+        messageHandler.builder()
+            .destination("/queue/graph/runtime/mock-id")
+            .header("status", ActionStatus.ON_READY)
+            .header("node-id", executionTask.task.node.id)
+            .send()
+    }
+
+    fun sendRunning() {
+        messageHandler.builder()
+            .destination("/queue/graph/runtime/mock-id")
+            .header("status", ActionStatus.RUNNING)
+            .header("node-id", executionTask.task.node.id)
+            .send()
+    }
+
+    fun sendFailure(e: RuntimeException) {
+        messageHandler.builder()
+            .payload(e.message)
+            .destination("/queue/graph/runtime/mock-id")
+            .header("node-id", executionTask.task.node.id)
+            .header("status", ActionStatus.FAILURE)
+            .send()
+    }
+
+    fun sendSuccess() {
+        messageHandler.builder()
+            .destination("/queue/graph/runtime/mock-id")
+            .header("status", ActionStatus.SUCCESS)
+            .header("node-id", executionTask.task.node.id)
+            .send()
+    }
+
 }
