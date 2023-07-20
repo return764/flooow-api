@@ -237,14 +237,15 @@ class TaskMonitor(private val optionFillingHandler: ActionOptionFillingHandlers)
                         .header("status", "success")
                         .header("node-id", task.task.node.id)
                         .send()
-                } catch (e: TaskException) {
-                    ctx.getMessagingHandler().builder()
-                        .payload(e.message)
-                        .destination("/queue/graph/runtime/mock-id")
-                        .header("node-id", task.task.node.id)
-                        .header("status", "failed")
-                        .send()
                 } catch (e: RuntimeException) {
+                    if (e is TaskException) {
+                        ctx.getMessagingHandler().builder()
+                            .payload(e.message)
+                            .destination("/queue/graph/runtime/mock-id")
+                            .header("node-id", task.task.node.id)
+                            .header("status", "failed")
+                            .send()
+                    }
                     logger.info("Error occur when execute task... $e")
                     cleanUpAll()
                     cancel()
