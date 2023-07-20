@@ -3,6 +3,7 @@ package com.cn.tg.flooow.service
 import com.cn.tg.flooow.entity.vo.ActionOptionVO
 import com.cn.tg.flooow.entity.vo.ActionVO
 import com.cn.tg.flooow.entity.vo.GraphDataVO
+import com.cn.tg.flooow.enums.ActionStatus
 import com.cn.tg.flooow.exceptions.TaskException
 import com.cn.tg.flooow.model.Node
 import com.cn.tg.flooow.model.action.Action
@@ -169,7 +170,7 @@ class TaskMonitor(private val optionFillingHandler: ActionOptionFillingHandlers)
     private suspend fun notifyNext(task: ExecutionTask) {
         mutex.withLock {
             completedTasks.add(task)
-            nextTaskChannel.send(task)
+            nextTaskChannel.trySend(task)
         }
     }
 
@@ -209,7 +210,11 @@ class TaskMonitor(private val optionFillingHandler: ActionOptionFillingHandlers)
                     }
                 }
             }
-
+            ctx.getMessagingHandler().builder()
+                .destination("/queue/graph/runtime/mock-id")
+                .header("status", ActionStatus.ON_READY)
+                .header("node-id", task.task.node.id)
+                .send()
             val job = buildJob(ctx, task)
             jobCoroutineMap.putIfAbsent(task, job)
             waitingTasks.remove(task)
@@ -224,26 +229,21 @@ class TaskMonitor(private val optionFillingHandler: ActionOptionFillingHandlers)
         val job = ctx.launch(start = CoroutineStart.LAZY) {
             optionFillingHandler.apply(ctx, task)
 
+            ctx.getMessagingHandler().builder()
+                .destination("/queue/graph/runtime/mock-id")
+                .header("status", ActionStatus.RUNNING)
+                .header("node-id", task.task.node.id)
+                .send()
             val timer = measureTimeMillis {
                 try {
-                    ctx.getMessagingHandler().builder()
-                        .destination("/queue/graph/runtime/mock-id")
-                        .header("status", "start")
-                        .header("node-id", task.task.node.id)
-                        .send()
                     task.action.bind(ctx).run()
-                    ctx.getMessagingHandler().builder()
-                        .destination("/queue/graph/runtime/mock-id")
-                        .header("status", "success")
-                        .header("node-id", task.task.node.id)
-                        .send()
                 } catch (e: RuntimeException) {
                     if (e is TaskException) {
                         ctx.getMessagingHandler().builder()
                             .payload(e.message)
                             .destination("/queue/graph/runtime/mock-id")
                             .header("node-id", task.task.node.id)
-                            .header("status", "failed")
+                            .header("status", ActionStatus.FAILURE)
                             .send()
                     }
                     logger.info("Error occur when execute task... $e")
@@ -252,6 +252,12 @@ class TaskMonitor(private val optionFillingHandler: ActionOptionFillingHandlers)
                     return@launch
                 }
             }
+            ctx.getMessagingHandler().builder()
+                .destination("/queue/graph/runtime/mock-id")
+                .header("status", ActionStatus.SUCCESS)
+                .header("node-id", task.task.node.id)
+                .header("timer", timer)
+                .send()
             logger.info("Task [${task.task.action.templateName}] execution successful, cost $timer millis")
         }
         return job
