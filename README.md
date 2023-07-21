@@ -7,7 +7,7 @@ project: flooow-api
 ## Process
 
 - [ ] support CRUD for action or node by websocket
-- [ ] support action status synchronization
+- [X] support action status synchronization
 - [X] optimize task execution process, run task one by one
 - [X] support graph execution
 - [X] support save&load action options
