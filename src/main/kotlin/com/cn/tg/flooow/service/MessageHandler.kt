@@ -2,6 +2,7 @@ package com.cn.tg.flooow.service
 
 import com.cn.tg.flooow.enums.ActionStatus
 import com.cn.tg.flooow.enums.ReturnType
+import com.cn.tg.flooow.exceptions.TaskException
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Component
 
@@ -94,6 +95,15 @@ class TaskMessageHandler(
             .destination("/queue/graph/runtime/mock-id")
             .header("status", ActionStatus.SUCCESS)
             .header("node-id", executionTask.task.node.id)
+            .send()
+    }
+
+    fun sendValidationFailed(e: TaskException) {
+        messageHandler.builder()
+            .payload(e.message)
+            .destination("/queue/graph/runtime/mock-id")
+            .header("node-id", executionTask.task.node.id)
+            .header("status", ActionStatus.VALIDATION_FAILED)
             .send()
     }
 

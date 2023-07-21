@@ -6,4 +6,5 @@ enum class ActionStatus {
     SUCCESS,
     FAILURE,
     ON_READY,
+    VALIDATION_FAILED
 }

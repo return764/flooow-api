@@ -3,6 +3,8 @@ package com.cn.tg.flooow.service
 import com.cn.tg.flooow.entity.vo.ActionOptionVO
 import com.cn.tg.flooow.entity.vo.ActionVO
 import com.cn.tg.flooow.entity.vo.GraphDataVO
+import com.cn.tg.flooow.exceptions.TaskRuntimeException
+import com.cn.tg.flooow.exceptions.TaskValidationException
 import com.cn.tg.flooow.model.Node
 import com.cn.tg.flooow.model.action.Action
 import com.cn.tg.flooow.model.dag.DirectedAcyclicGraph
@@ -225,20 +227,30 @@ class TaskMonitor(private val optionFillingHandler: ActionOptionFillingHandlers)
         val job = ctx.launch(start = CoroutineStart.LAZY) {
             optionFillingHandler.apply(ctx, task)
 
-            taskLogger.sendRunning()
-            val timer = measureTimeMillis {
-                try {
-                    task.action.bind(ctx).run()
-                } catch (e: RuntimeException) {
-                    taskLogger.sendFailure(e)
-                    logger.info("Error occur when execute task... $e")
-                    cleanUpAll()
-                    cancel()
-                    return@launch
+            try {
+                task.action.bind(ctx).validate()
+
+                taskLogger.sendRunning()
+                val timer = measureTimeMillis {
+                    task.action.run()
                 }
+                taskLogger.sendSuccess()
+                logger.info("Task [${task.task.action.templateName}] execution successful, cost $timer millis")
+            } catch (e: RuntimeException) {
+                if (e is TaskValidationException) {
+                    taskLogger.sendValidationFailed(e)
+                }
+
+                if (e is TaskRuntimeException) {
+                    taskLogger.sendFailure(e)
+                }
+                logger.info("Error occur when execute task... $e")
+                cleanUpAll()
+                cancel()
+                return@launch
             }
-            taskLogger.sendSuccess()
-            logger.info("Task [${task.task.action.templateName}] execution successful, cost $timer millis")
+
+
         }
         return job
     }

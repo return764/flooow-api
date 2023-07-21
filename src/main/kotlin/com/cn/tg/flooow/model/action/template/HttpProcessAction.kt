@@ -1,6 +1,7 @@
 package com.cn.tg.flooow.model.action.template
 
-import com.cn.tg.flooow.exceptions.TaskException
+import com.cn.tg.flooow.exceptions.TaskRuntimeException
+import com.cn.tg.flooow.exceptions.TaskValidationException
 import com.cn.tg.flooow.model.action.AbstractAction
 import com.cn.tg.flooow.model.action.Action
 import com.cn.tg.flooow.model.action.annotation.ActionMarker
@@ -8,6 +9,7 @@ import com.cn.tg.flooow.model.action.annotation.ActionOption
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.springframework.http.HttpMethod
 import java.io.IOException
 
 
@@ -19,6 +21,16 @@ class HttpProcessAction: AbstractAction(), Action {
 
     @ActionOption(name = "url", defaultValue = "")
     private lateinit var url: String
+
+    override fun validate() {
+        if (!HttpMethod.values().toSet().map { it.name() }.contains(method)) {
+            throw TaskValidationException("not support http method")
+        }
+
+        if (!url.startsWith("http")) {
+            throw TaskValidationException("url is not start with http")
+        }
+    }
 
     override fun run() {
         val client = OkHttpClient()
@@ -36,10 +48,12 @@ class HttpProcessAction: AbstractAction(), Action {
                 return
             }
             if (response.code >= 400) {
-                throw TaskException(body ?: "")
+                throw TaskRuntimeException(body ?: "")
             }
+        } catch (e: RuntimeException) {
+            throw TaskRuntimeException("error: ${e.message}")
         } catch (e: IOException) {
-            throw TaskException("connect error: ${e.message}")
+            throw TaskRuntimeException("connect error: ${e.message}")
         }
     }
 }

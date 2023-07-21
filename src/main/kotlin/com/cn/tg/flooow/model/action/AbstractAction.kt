@@ -11,6 +11,8 @@ abstract class AbstractAction : Action {
         return this
     }
 
+    override fun validate() {}
+
     fun current(): ExecutionTask {
         return ctx.currentTask(this)
     }
