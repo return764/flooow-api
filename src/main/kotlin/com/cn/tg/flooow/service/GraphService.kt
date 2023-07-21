@@ -31,7 +31,7 @@ class GraphService(
     private val actionTemplateOptionRepository: ActionTemplateOptionRepository
 ) {
 
-    fun getGraphData(): GraphDataVO {
+    fun getGraphData(graphId: String): GraphDataVO {
         val listNodes = nodeRepository.findAll()
             .filter { !it.isDeleted }
             .map {

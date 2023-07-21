@@ -65,45 +65,57 @@ class TaskMessageHandler(
     private val ctx: TaskContext,
     private val executionTask: ExecutionTask) {
 
+    private fun MessageHandler.MessageBuilder.destination(ctx: TaskContext): MessageHandler.MessageBuilder {
+        return this.destination(TaskContext.GRAPH_RUNTIME_PATH + ctx.graphId)
+    }
+
+    private fun MessageHandler.MessageBuilder.status(status: ActionStatus): MessageHandler.MessageBuilder {
+        return this.header("status", status)
+    }
+
+    private fun MessageHandler.MessageBuilder.nodeId(executionTask: ExecutionTask): MessageHandler.MessageBuilder {
+        return this.header("node-id", executionTask.task.node.id)
+    }
+
     fun sendOnReady() {
         messageHandler.builder()
-            .destination("/queue/graph/runtime/mock-id")
-            .header("status", ActionStatus.ON_READY)
-            .header("node-id", executionTask.task.node.id)
+            .destination(ctx)
+            .status(ActionStatus.ON_READY)
+            .nodeId(executionTask)
             .send()
     }
 
     fun sendRunning() {
         messageHandler.builder()
-            .destination("/queue/graph/runtime/mock-id")
-            .header("status", ActionStatus.RUNNING)
-            .header("node-id", executionTask.task.node.id)
+            .destination(ctx)
+            .status(ActionStatus.RUNNING)
+            .nodeId(executionTask)
             .send()
     }
 
     fun sendFailure(e: RuntimeException) {
         messageHandler.builder()
             .payload(e.message)
-            .destination("/queue/graph/runtime/mock-id")
-            .header("node-id", executionTask.task.node.id)
-            .header("status", ActionStatus.FAILURE)
+            .destination(ctx)
+            .status(ActionStatus.FAILURE)
+            .nodeId(executionTask)
             .send()
     }
 
     fun sendSuccess() {
         messageHandler.builder()
-            .destination("/queue/graph/runtime/mock-id")
-            .header("status", ActionStatus.SUCCESS)
-            .header("node-id", executionTask.task.node.id)
+            .destination(ctx)
+            .status(ActionStatus.SUCCESS)
+            .nodeId(executionTask)
             .send()
     }
 
     fun sendValidationFailed(e: TaskException) {
         messageHandler.builder()
             .payload(e.message)
-            .destination("/queue/graph/runtime/mock-id")
-            .header("node-id", executionTask.task.node.id)
-            .header("status", ActionStatus.VALIDATION_FAILED)
+            .destination(ctx)
+            .status(ActionStatus.VALIDATION_FAILED)
+            .nodeId(executionTask)
             .send()
     }
 

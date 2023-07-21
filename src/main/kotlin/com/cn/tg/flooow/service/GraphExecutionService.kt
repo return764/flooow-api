@@ -35,9 +35,9 @@ class GraphExecutionService(
 ) {
 
     fun execute(graphId: String) {
-        val graphData = graphService.getGraphData()
+        val graphData = graphService.getGraphData(graphId)
         val executionDAG = buildGraph(graphData)
-        val context = TaskContext(graphService, template, executionDAG)
+        val context = TaskContext(graphService, template, executionDAG, graphId)
         taskExecutor.execute(context)
     }
 
@@ -262,7 +262,13 @@ class TaskContext(
     private val graphService: GraphService,
     private val template: MessageHandler,
     private val dag: ExecutionDAG,
+    val graphId: String,
 ) : CoroutineScope {
+
+    companion object {
+        const val GRAPH_PATH = "/queue/graph/"
+        const val GRAPH_RUNTIME_PATH = "/queue/graph/runtime/"
+    }
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Default + Job()

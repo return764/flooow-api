@@ -25,7 +25,7 @@ class GraphController(
 
     @GetMapping
     fun getGraphData(): GraphDataVO {
-        return graphService.getGraphData()
+        return graphService.getGraphData("mock-id")
     }
 
     @GetMapping("node/{nodeId}/options")
