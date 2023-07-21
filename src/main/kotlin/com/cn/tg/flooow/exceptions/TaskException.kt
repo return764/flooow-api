@@ -1,4 +1,4 @@
 package com.cn.tg.flooow.exceptions
 
-class TaskException(message: String): RuntimeException(message) {
+open class TaskException(message: String): RuntimeException(message) {
 }
