@@ -17,9 +17,10 @@ data class Node(
     val ports: Port,
     val data: Map<String, String>,
 ) {
-    fun toPO(label: String?): NodePO {
+    fun toPO(label: String?, graphId: String): NodePO {
         return NodePO(
             id = id,
+            graphId = graphId,
             name = name ?: generateName(label),
             shape = shape,
             x = x,

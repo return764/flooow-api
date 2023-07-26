@@ -5,6 +5,7 @@ import com.cn.tg.flooow.entity.vo.ActionOptionVO
 import com.cn.tg.flooow.entity.vo.ActionTemplateVO
 import com.cn.tg.flooow.service.GraphService
 import com.cn.tg.flooow.entity.vo.GraphDataVO
+import com.cn.tg.flooow.entity.vo.GraphSummaryVO
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -13,19 +14,19 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("graph")
+@RequestMapping("graphs")
 class GraphController(
     private val graphService: GraphService
 ) {
 
-    @PostMapping("execute")
-    fun execute(): String {
-        return "11"
+    @GetMapping("{id}")
+    fun getGraphData(@PathVariable id: String): GraphDataVO {
+        return graphService.getGraphData(id)
     }
 
     @GetMapping
-    fun getGraphData(): GraphDataVO {
-        return graphService.getGraphData("mock-id")
+    fun getGraphList(): List<GraphSummaryVO> {
+        return graphService.retrieveAllGraph()
     }
 
     @GetMapping("node/{nodeId}/options")

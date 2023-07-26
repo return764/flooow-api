@@ -11,6 +11,8 @@ data class NodePO (
     @Id
     @Column(name = "id")
     val id: String,
+    @Column(name = "graph_id")
+    val graphId: String,
     @Column(name = "shape")
     val shape: String,
     @Column(name = "name")

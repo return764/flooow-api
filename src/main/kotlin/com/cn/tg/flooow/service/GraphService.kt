@@ -1,13 +1,13 @@
 package com.cn.tg.flooow.service
 
 import com.cn.tg.flooow.entity.ActionOptionPO
-import com.cn.tg.flooow.entity.EdgePO
 import com.cn.tg.flooow.entity.vo.ActionOptionVO
 import com.cn.tg.flooow.entity.vo.ActionTemplateVO
 import com.cn.tg.flooow.entity.vo.ActionVO
 import com.cn.tg.flooow.repository.ActionRepository
 import com.cn.tg.flooow.model.Edge
 import com.cn.tg.flooow.entity.vo.GraphDataVO
+import com.cn.tg.flooow.entity.vo.GraphSummaryVO
 import com.cn.tg.flooow.enums.OptionInputType
 import com.cn.tg.flooow.entity.vo.MoveNodeEvent
 import com.cn.tg.flooow.model.Node
@@ -15,6 +15,7 @@ import com.cn.tg.flooow.repository.ActionOptionRepository
 import com.cn.tg.flooow.repository.ActionTemplateOptionRepository
 import com.cn.tg.flooow.repository.ActionTemplateRepository
 import com.cn.tg.flooow.repository.EdgeRepository
+import com.cn.tg.flooow.repository.GraphRepository
 import com.cn.tg.flooow.repository.NodeRepository
 import com.cn.tg.flooow.repository.PortRepository
 import jakarta.transaction.Transactional
@@ -24,25 +25,29 @@ import org.springframework.stereotype.Service
 class GraphService(
     private val actionRepository: ActionRepository,
     private val actionOptionRepository: ActionOptionRepository,
+    private val graphRepository: GraphRepository,
     private val nodeRepository: NodeRepository,
     private val portRepository: PortRepository,
     private val edgeRepository: EdgeRepository,
     private val actionTemplateRepository: ActionTemplateRepository,
     private val actionTemplateOptionRepository: ActionTemplateOptionRepository
 ) {
-
     fun getGraphData(graphId: String): GraphDataVO {
-        val listNodes = nodeRepository.findAll()
+        val listNodes = nodeRepository.findAllByGraphId(graphId)
             .filter { !it.isDeleted }
             .map {
                 it.toModel(portRepository.findAllByNodeId(it.id), actionOptionRepository.findAllByNodeId(it.id))
             }
-        val listEdges = edgeRepository.findAll()
+        val listEdges = edgeRepository.findAllByGraphId(graphId)
             .filter { !it.isDeleted }
             .map {
                 it.toModel()
             }
         return GraphDataVO(listNodes, listEdges)
+    }
+
+    fun retrieveAllGraph(): List<GraphSummaryVO> {
+        return graphRepository.findAll().map { it.toSummary()}
     }
 
     fun getAction(nodeId: String): ActionVO {
@@ -59,7 +64,7 @@ class GraphService(
     }
 
     @Transactional
-    fun addNode(node: Node): Node {
+    fun addNode(graphId: String, node: Node): Node {
         return with(node) {
             val template = actionTemplateRepository.findByTemplateName(data["template"])
             val action = actionRepository.save(toActionPO(template))
@@ -78,21 +83,12 @@ class GraphService(
                     visible = it.visible
                 )
             }.let { actionOptionRepository.saveAll(it) }
-            nodeRepository.save(toPO(data["label"])).toModel(ports, options)
+            nodeRepository.save(toPO(data["label"], graphId)).toModel(ports, options)
         }
     }
 
-    fun addEdge(edge: Edge): Edge {
-        with(edge) {
-            EdgePO(
-                id = id,
-                shape = shape,
-                sourceCellId = source.cell,
-                sourcePortId = source.port,
-                targetCellId = target.cell,
-                targetPortId = target.port
-            ).let { edgeRepository.save(it) }
-        }
+    fun addEdge(graphId: String, edge: Edge): Edge {
+        edge.toPO(graphId).let { edgeRepository.save(it) }
         return edge
     }
 

@@ -16,6 +16,7 @@ project: flooow-api
 - [X] support task runtime message transform
 - [ ] support task runtime error handler
 - [X] support validate task
+- [ ] support multipart graph
 
 ## Optimize
 - [X] refactor option field autofill logic

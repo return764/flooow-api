@@ -4,4 +4,5 @@ import com.cn.tg.flooow.entity.EdgePO
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface EdgeRepository: JpaRepository<EdgePO, String> {
+    fun findAllByGraphId(graphId: String): List<EdgePO>
 }

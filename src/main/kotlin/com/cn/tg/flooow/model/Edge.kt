@@ -1,5 +1,6 @@
 package com.cn.tg.flooow.model
 
+import com.cn.tg.flooow.entity.EdgePO
 import com.fasterxml.jackson.annotation.JsonProperty
 
 
@@ -11,6 +12,15 @@ data class Edge(
     @field:JsonProperty("zIndex")
     val zIndex: Int? = -1,
 ) {
+    fun toPO(graphId: String) = EdgePO(
+        id = id,
+        shape = shape,
+        graphId = graphId,
+        sourceCellId = source.cell,
+        sourcePortId = source.port,
+        targetCellId = target.cell,
+        targetPortId = target.port,
+    )
 }
 
 data class PortLinkPoint(

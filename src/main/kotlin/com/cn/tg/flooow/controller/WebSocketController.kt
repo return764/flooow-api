@@ -22,7 +22,7 @@ class WebSocketController(
     fun createNode(node: Node, @DestinationVariable graphId: String) {
         template.builder()
             .destination("/queue/graph/$graphId")
-            .payload(graphService.addNode(node))
+            .payload(graphService.addNode(graphId, node))
             .returnType(ReturnType.CREATE_NODE)
             .send()
     }
@@ -31,7 +31,7 @@ class WebSocketController(
     fun createEdge(edge: Edge, @DestinationVariable graphId: String) {
         template.builder()
             .destination("/queue/graph/$graphId")
-            .payload(graphService.addEdge(edge))
+            .payload(graphService.addEdge(graphId, edge))
             .returnType(ReturnType.CREATE_EDGE)
             .send()
     }
