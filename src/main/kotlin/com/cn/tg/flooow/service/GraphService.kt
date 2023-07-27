@@ -1,6 +1,8 @@
 package com.cn.tg.flooow.service
 
+import com.cn.tg.flooow.controller.request.GraphCreationRequest
 import com.cn.tg.flooow.entity.ActionOptionPO
+import com.cn.tg.flooow.entity.GraphPO
 import com.cn.tg.flooow.entity.vo.ActionOptionVO
 import com.cn.tg.flooow.entity.vo.ActionTemplateVO
 import com.cn.tg.flooow.entity.vo.ActionVO
@@ -158,5 +160,10 @@ class GraphService(
             )
         }
         return actionOptionRepository.saveAll(changedActionOptions).map { it.toVO() }
+    }
+
+    fun createGraph(request: GraphCreationRequest): GraphSummaryVO {
+        val graph = GraphPO(name = request.name, isDeleted = false)
+        return graphRepository.save(graph).toSummary()
     }
 }

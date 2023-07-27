@@ -11,13 +11,13 @@ import jakarta.persistence.Id
 data class GraphPO(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    val id: String,
+    val id: String? = null,
     @Column(name = "name")
     val name: String,
     @Column(name = "is_deleted")
     val isDeleted: Boolean
 ) {
     fun toSummary(): GraphSummaryVO {
-        return GraphSummaryVO(id, name)
+        return GraphSummaryVO(id!!, name)
     }
 }
