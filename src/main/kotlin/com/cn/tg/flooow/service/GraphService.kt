@@ -22,7 +22,6 @@ import com.cn.tg.flooow.repository.NodeRepository
 import com.cn.tg.flooow.repository.PortRepository
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
-import java.time.Instant
 
 @Service
 class GraphService(
@@ -37,12 +36,10 @@ class GraphService(
 ) {
     fun getGraphData(graphId: String): GraphDataVO {
         val listNodes = nodeRepository.findAllByGraphId(graphId)
-            .filter { !it.isDeleted() }
             .map {
                 it.toModel(portRepository.findAllByNodeId(it.id), actionOptionRepository.findAllByNodeId(it.id))
             }
         val listEdges = edgeRepository.findAllByGraphId(graphId)
-            .filter { !it.isDeleted() }
             .map {
                 it.toModel()
             }
@@ -50,7 +47,7 @@ class GraphService(
     }
 
     fun retrieveAllGraph(): List<GraphSummaryVO> {
-        return graphRepository.findAll().filter { !it.isDeleted() }.map { it.toSummary()}
+        return graphRepository.findAll().map { it.toSummary()}
     }
 
     fun getAction(nodeId: String): ActionVO {
@@ -120,33 +117,32 @@ class GraphService(
     fun getActionOptions(nodeId: String): List<ActionOptionVO> {
        return actionOptionRepository.findAllByNodeId(nodeId)
            .filter { it.visible }
-           .filter { !it.isDeleted() }
            .map { it.toVO() }
     }
 
     @Transactional
     fun deleteNode(nodeId: String): Boolean {
         nodeRepository.findById(nodeId).ifPresent {
-            nodeRepository.save(it.copy(deletedAt = Instant.now()))
+            nodeRepository.delete(it)
         }
 
         portRepository.findAllByNodeId(nodeId).forEach {
-            portRepository.save(it.copy(deletedAt = Instant.now()))
+            portRepository.delete(it)
         }
 
         actionRepository.findByNodeId(nodeId).ifPresent {
-            actionRepository.save(it.copy(deletedAt = Instant.now()))
+            actionRepository.delete(it)
         }
 
         actionOptionRepository.findAllByNodeId(nodeId).forEach {
-            actionOptionRepository.save(it.copy(deletedAt = Instant.now()))
+            actionOptionRepository.delete(it)
         }
         return true
     }
 
     fun deleteEdge(edgeId: String): Boolean {
         edgeRepository.findById(edgeId).ifPresent {
-            edgeRepository.save(it.copy(deletedAt = Instant.now()))
+            edgeRepository.delete(it)
         }
         return true
     }
@@ -170,7 +166,6 @@ class GraphService(
 
     fun deleteGraph(id: String): GraphSummaryVO {
         val graph = graphRepository.findById(id).orElseThrow()
-        val newGraph = graph.copy(deletedAt = Instant.now())
-        return graphRepository.save(newGraph).toSummary()
+        return graphRepository.delete(graph).let { graph.toSummary() }
     }
 }

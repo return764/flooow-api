@@ -10,8 +10,13 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import org.hibernate.annotations.SQLDelete
+import org.hibernate.annotations.Where
 import java.time.Instant
 
+
+@Where(clause = "deleted_at is null")
+@SQLDelete(sql = "UPDATE action_options SET deleted_at = now() WHERE id=?")
 @Entity(name = "action_options")
 data class ActionOptionPO(
     @Id

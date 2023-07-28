@@ -5,8 +5,13 @@ import com.cn.tg.flooow.model.PortMeta
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
+import org.hibernate.annotations.SQLDelete
+import org.hibernate.annotations.Where
 import java.time.Instant
 
+
+@Where(clause = "deleted_at is null")
+@SQLDelete(sql = "UPDATE nodes_ports SET deleted_at = now() WHERE id=?")
 @Entity(name = "nodes_ports")
 data class PortPO(
     @Id

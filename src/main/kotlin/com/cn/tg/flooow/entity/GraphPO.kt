@@ -7,8 +7,12 @@ import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import org.hibernate.annotations.SQLDelete
+import org.hibernate.annotations.Where
 import java.time.Instant
 
+@Where(clause = "deleted_at is null")
+@SQLDelete(sql = "UPDATE graphs SET deleted_at = now() WHERE id=?")
 @Entity(name = "graphs")
 data class GraphPO(
     @Id
