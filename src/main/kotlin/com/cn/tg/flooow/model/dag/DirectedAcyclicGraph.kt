@@ -20,6 +20,11 @@ class DirectedAcyclicGraph<Node> {
         return true
     }
 
+    // 空图检查
+    fun emptyCheck(): Boolean {
+        return graph.isNotEmpty()
+    }
+
     fun addNode(node: Node) {
         if (graph[node] == null) {
             graph[node] = mutableListOf()

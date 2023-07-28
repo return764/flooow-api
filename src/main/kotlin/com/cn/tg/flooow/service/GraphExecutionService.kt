@@ -39,11 +39,7 @@ class GraphExecutionService(
         val graphData = graphService.getGraphData(graphId)
         val executionDAG = buildGraph(graphData)
         val context = TaskContext(graphService, template, executionDAG, graphId)
-
-        if (!executionDAG.graphExecutionCheck()) {
-            throw TaskException("graph has circle or isolated node.")
-        }
-
+        executionDAG.graphExecutionCheck()
         taskExecutor.execute(context)
     }
 
@@ -89,8 +85,14 @@ class ExecutionDAG(tasks: List<Task>, edges: List<TaskEdge>) {
         }
     }
 
-    fun graphExecutionCheck(): Boolean {
-        return this.dag.isolatedCheck()
+    fun graphExecutionCheck() {
+        if (!this.dag.isolatedCheck()) {
+            throw TaskException("graph has isolated node.")
+        }
+
+        if (!this.dag.emptyCheck()) {
+            throw TaskException("grpah can't be empty")
+        }
     }
 
     fun getFirstTasks(): List<ExecutionTask> {
