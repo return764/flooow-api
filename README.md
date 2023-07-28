@@ -3,6 +3,7 @@ project: flooow-api
 
 ## Tech
 - [ ] add global extension function, like list.toVO or list.toPO?
+- [ ] add unit test for code
 
 ## Process
 
@@ -14,13 +15,15 @@ project: flooow-api
 - [X] support option input type
 - [X] support build task in runtime with input type
 - [X] support task runtime message transform
-- [ ] support task runtime error handler
+- [X] support task runtime error handler
 - [X] support validate task
-- [ ] support multipart graph
+- [X] support multipart graph
+- [ ] export SDK
 
 ## Optimize
 - [X] refactor option field autofill logic
 - [X] refactor MessageHandler
+- [X] use Jpa Auditing
 - [ ] enhance the graph structure algorithm, make it support distinguish if there are two graph or have circle
 - [X] extract AbstractAction
 
