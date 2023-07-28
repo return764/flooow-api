@@ -3,12 +3,22 @@ package com.cn.tg.flooow.model.dag
 import java.util.*
 
 class DirectedAcyclicGraph<Node> {
-    // 所有入度为0的节点，即为开始节点
-    // 所有出度为0的节点，即为结束节点
-    // 环校验
-
     private val graph: MutableMap<Node, MutableList<Node>> = mutableMapOf()
     private val reverseGraph: MutableMap<Node, MutableList<Node>> = mutableMapOf()
+
+    // 环检查
+    fun circleCheck(): Boolean {
+        // too hard
+        return true
+    }
+
+    // 孤立节点检查
+    fun isolatedCheck(): Boolean {
+        if (getLasts().intersect(getFirsts().toSet()).isNotEmpty()) {
+            return false
+        }
+        return true
+    }
 
     fun addNode(node: Node) {
         if (graph[node] == null) {

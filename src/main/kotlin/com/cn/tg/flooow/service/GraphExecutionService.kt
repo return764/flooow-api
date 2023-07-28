@@ -3,6 +3,7 @@ package com.cn.tg.flooow.service
 import com.cn.tg.flooow.entity.vo.ActionOptionVO
 import com.cn.tg.flooow.entity.vo.ActionVO
 import com.cn.tg.flooow.entity.vo.GraphDataVO
+import com.cn.tg.flooow.exceptions.TaskException
 import com.cn.tg.flooow.exceptions.TaskRuntimeException
 import com.cn.tg.flooow.exceptions.TaskValidationException
 import com.cn.tg.flooow.model.Node
@@ -38,6 +39,11 @@ class GraphExecutionService(
         val graphData = graphService.getGraphData(graphId)
         val executionDAG = buildGraph(graphData)
         val context = TaskContext(graphService, template, executionDAG, graphId)
+
+        if (!executionDAG.graphExecutionCheck()) {
+            throw TaskException("graph has circle or isolated node.")
+        }
+
         taskExecutor.execute(context)
     }
 
@@ -81,6 +87,10 @@ class ExecutionDAG(tasks: List<Task>, edges: List<TaskEdge>) {
         edges.forEach {
             this.dag.addEdge(it.source, it.target)
         }
+    }
+
+    fun graphExecutionCheck(): Boolean {
+        return this.dag.isolatedCheck()
     }
 
     fun getFirstTasks(): List<ExecutionTask> {
