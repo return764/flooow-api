@@ -8,6 +8,7 @@ import com.cn.tg.flooow.service.GraphService
 import com.cn.tg.flooow.entity.vo.GraphDataVO
 import com.cn.tg.flooow.entity.vo.GraphSummaryVO
 import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -26,6 +27,11 @@ class GraphController(
     @PostMapping
     fun createGraph(@RequestBody request: GraphCreationRequest): GraphSummaryVO {
         return graphService.createGraph(request)
+    }
+
+    @DeleteMapping("{id}")
+    fun createGraph(@PathVariable id: String): GraphSummaryVO {
+        return graphService.deleteGraph(id)
     }
 
     @GetMapping("{id}")

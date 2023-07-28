@@ -49,7 +49,7 @@ class GraphService(
     }
 
     fun retrieveAllGraph(): List<GraphSummaryVO> {
-        return graphRepository.findAll().map { it.toSummary()}
+        return graphRepository.findAll().filter { !it.isDeleted }.map { it.toSummary()}
     }
 
     fun getAction(nodeId: String): ActionVO {
@@ -165,5 +165,11 @@ class GraphService(
     fun createGraph(request: GraphCreationRequest): GraphSummaryVO {
         val graph = GraphPO(name = request.name, isDeleted = false)
         return graphRepository.save(graph).toSummary()
+    }
+
+    fun deleteGraph(id: String): GraphSummaryVO {
+        val graph = graphRepository.findById(id).orElseThrow()
+        val newGraph = graph.copy(isDeleted = true)
+        return graphRepository.save(newGraph).toSummary()
     }
 }
