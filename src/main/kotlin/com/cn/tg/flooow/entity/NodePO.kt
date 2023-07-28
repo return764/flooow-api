@@ -1,10 +1,12 @@
 package com.cn.tg.flooow.entity
 
+import com.cn.tg.flooow.entity.base.AuditingEntity
 import com.cn.tg.flooow.model.Node
 import com.cn.tg.flooow.model.Port
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
+import java.time.Instant
 
 @Entity(name = "nodes")
 data class NodePO (
@@ -25,9 +27,8 @@ data class NodePO (
     val width: Int?,
     @Column(name = "height")
     val height: Int?,
-    @Column(name = "is_deleted")
-    val isDeleted: Boolean = false
-) {
+    override var deletedAt: Instant? = null
+): AuditingEntity() {
     fun toModel(ports: List<PortPO>, options: List<ActionOptionPO>): Node {
         return Node(
             id = id,

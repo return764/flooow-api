@@ -1,5 +1,6 @@
 package com.cn.tg.flooow.entity
 
+import com.cn.tg.flooow.entity.base.AuditingEntity
 import com.cn.tg.flooow.entity.vo.ActionOptionVO
 import com.cn.tg.flooow.enums.OptionInputType
 import jakarta.persistence.Column
@@ -9,6 +10,7 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import java.time.Instant
 
 @Entity(name = "action_options")
 data class ActionOptionPO(
@@ -31,9 +33,8 @@ data class ActionOptionPO(
     val type: String,
     @Column(name = "visible")
     val visible: Boolean,
-    @Column(name = "is_deleted")
-    val isDeleted: Boolean = false
-) {
+    override var deletedAt: Instant? = null
+): AuditingEntity() {
     fun toVO(): ActionOptionVO {
         return ActionOptionVO(
             id = id!!,

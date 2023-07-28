@@ -1,10 +1,12 @@
 package com.cn.tg.flooow.entity
 
+import com.cn.tg.flooow.entity.base.AuditingEntity
 import com.cn.tg.flooow.model.Edge
 import com.cn.tg.flooow.model.PortLinkPoint
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
+import java.time.Instant
 
 @Entity(name = "nodes_edges")
 data class EdgePO(
@@ -23,9 +25,8 @@ data class EdgePO(
     val targetCellId: String,
     @Column(name = "target_port_id")
     val targetPortId: String,
-    @Column(name = "is_deleted")
-    val isDeleted: Boolean = false
-) {
+    override var deletedAt: Instant? = null
+): AuditingEntity() {
     fun toModel(): Edge {
         return Edge(
             id = id,
