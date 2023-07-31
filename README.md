@@ -19,6 +19,7 @@ project: flooow-api
 - [X] support validate task
 - [X] support multipart graph
 - [ ] export SDK
+- [ ] expand more type for action options
 
 ## Optimize
 - [X] refactor option field autofill logic
@@ -30,3 +31,4 @@ project: flooow-api
 ## Bug Fix
 
 - [X] fix error of zIndex serialization
+- [ ] checking isolate node
