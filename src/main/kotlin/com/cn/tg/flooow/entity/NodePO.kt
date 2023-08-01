@@ -44,7 +44,7 @@ data class NodePO (
             width = width,
             height = height,
             ports = Port(items = ports.map { it.toModel() }),
-            data = options.associate { it.key to it.value }
+            data = options.associate { it.key to it.typeValue.value }
         )
     }
 }

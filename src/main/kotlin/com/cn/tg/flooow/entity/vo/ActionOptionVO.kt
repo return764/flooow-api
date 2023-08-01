@@ -7,7 +7,7 @@ data class ActionOptionVO(
     val label: String,
     val type: String,
     val inputType: OptionInputType,
-    val value: String
+    val value: Any
 ) {
 
 }

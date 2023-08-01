@@ -81,14 +81,14 @@ class ActionInitializeListener(
         return listOf(
             ActionTemplateOptionPO(
                 templateId = template.id!!,
-                type = "String",
+                type = "java.lang.String",
                 key = "label",
                 defaultValue = actionMarker.label,
                 visible = false
             ),
             ActionTemplateOptionPO(
                 templateId = template.id,
-                type = "String",
+                type = "java.lang.String",
                 key = "template",
                 defaultValue = actionMarker.name,
                 visible = false

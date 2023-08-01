@@ -3,6 +3,7 @@ package com.cn.tg.flooow.service
 import com.cn.tg.flooow.controller.request.GraphCreationRequest
 import com.cn.tg.flooow.entity.ActionOptionPO
 import com.cn.tg.flooow.entity.GraphPO
+import com.cn.tg.flooow.entity.OptionTypeValue
 import com.cn.tg.flooow.entity.vo.ActionOptionVO
 import com.cn.tg.flooow.entity.vo.ActionTemplateVO
 import com.cn.tg.flooow.entity.vo.ActionVO
@@ -66,7 +67,7 @@ class GraphService(
     @Transactional
     fun addNode(graphId: String, node: Node): Node {
         return with(node) {
-            val template = actionTemplateRepository.findByTemplateName(data["template"])
+            val template = actionTemplateRepository.findByTemplateName(data["template"] as String)
             val action = actionRepository.save(toActionPO(template))
             val ports = portRepository.saveAll(buildPortsPOs())
             val templateOptions = actionTemplateOptionRepository.findAllByTemplateId(template?.id)
@@ -77,13 +78,12 @@ class GraphService(
                     actionId = action.id!!,
                     nodeId = node.id,
                     key = it.key,
-                    value = value ?: it.defaultValue,
-                    type = it.type,
+                    typeValue = OptionTypeValue(it.type ,value ?: it.defaultValue),
                     inputType = OptionInputType.DEFAULT,
                     visible = it.visible
                 )
             }.let { actionOptionRepository.saveAll(it) }
-            nodeRepository.save(toPO(data["label"], graphId)).toModel(ports, options)
+            nodeRepository.save(toPO(data["label"] as String, graphId)).toModel(ports, options)
         }
     }
 
@@ -153,7 +153,10 @@ class GraphService(
         val changedActionOptions = actionOptions.map {
             it.copy(
                 inputType = mappedActionOptions[it.id]?.inputType ?: it.inputType,
-                value = mappedActionOptions[it.id]?.value ?: it.value
+                typeValue = OptionTypeValue(
+                    mappedActionOptions[it.id]?.type ?: it.typeValue.type,
+                    mappedActionOptions[it.id]?.value ?: it.typeValue.value,
+                )
             )
         }
         return actionOptionRepository.saveAll(changedActionOptions).map { it.toVO() }

@@ -28,6 +28,7 @@ dependencies {
 	runtimeOnly("org.postgresql:postgresql")
 	implementation("com.squareup.okhttp3:okhttp:4.11.0")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	implementation("io.hypersistence:hypersistence-utils-hibernate-60:3.5.1")
 }
 
 tasks.withType<KotlinCompile> {
