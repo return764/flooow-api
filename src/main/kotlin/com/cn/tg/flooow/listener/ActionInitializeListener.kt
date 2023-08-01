@@ -2,6 +2,7 @@ package com.cn.tg.flooow.listener
 
 import com.cn.tg.flooow.entity.ActionTemplateOptionPO
 import com.cn.tg.flooow.entity.ActionTemplatePO
+import com.cn.tg.flooow.entity.OptionTypeValue
 import com.cn.tg.flooow.model.action.Action
 import com.cn.tg.flooow.model.action.annotation.ActionMarker
 import com.cn.tg.flooow.model.action.annotation.ActionOption
@@ -59,9 +60,8 @@ class ActionInitializeListener(
                 val option = field.getAnnotation(ActionOption::class.java)
                 ActionTemplateOptionPO(
                     templateId = newTemplate.id!!,
-                    type = field.type.typeName,
                     key = option.name,
-                    defaultValue = option.defaultValue,
+                    defaultTypeValue = OptionTypeValue(field.type.typeName, option.defaultValue.ifBlank { null }),
                     visible = true
                 )
             }.also { list ->
@@ -81,16 +81,14 @@ class ActionInitializeListener(
         return listOf(
             ActionTemplateOptionPO(
                 templateId = template.id!!,
-                type = "java.lang.String",
                 key = "label",
-                defaultValue = actionMarker.label,
+                defaultTypeValue = OptionTypeValue("java.lang.String",actionMarker.label),
                 visible = false
             ),
             ActionTemplateOptionPO(
                 templateId = template.id,
-                type = "java.lang.String",
                 key = "template",
-                defaultValue = actionMarker.name,
+                defaultTypeValue = OptionTypeValue("java.lang.String",actionMarker.name),
                 visible = false
             ),
         )

@@ -55,5 +55,5 @@ data class ActionOptionPO(
 
 data class OptionTypeValue(
     val type: String,
-    val value: Any
+    val value: Any?
 )

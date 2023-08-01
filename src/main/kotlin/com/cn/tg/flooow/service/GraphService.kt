@@ -78,7 +78,7 @@ class GraphService(
                     actionId = action.id!!,
                     nodeId = node.id,
                     key = it.key,
-                    typeValue = OptionTypeValue(it.type ,value ?: it.defaultValue),
+                    typeValue = it.defaultTypeValue.copy(value = value ?: it.defaultTypeValue.value),
                     inputType = OptionInputType.DEFAULT,
                     visible = it.visible
                 )
@@ -99,7 +99,7 @@ class GraphService(
                 ActionTemplateVO(
                     shape = it.shape,
                     data = options.associate { opt ->
-                        opt.key to opt.defaultValue
+                        opt.key to opt.defaultTypeValue.value
                     }
                 )
             }

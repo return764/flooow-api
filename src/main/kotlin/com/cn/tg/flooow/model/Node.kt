@@ -15,7 +15,7 @@ data class Node(
     val height: Int?,
     val width: Int?,
     val ports: Port,
-    val data: Map<String, Any>,
+    val data: Map<String, Any?>,
 ) {
     fun toPO(label: String?, graphId: String): NodePO {
         return NodePO(
@@ -36,7 +36,7 @@ data class Node(
 
     fun toActionPO(template: ActionTemplatePO?): ActionPO {
         return ActionPO(
-            templateId = template?.id,
+            templateId = template!!.id,
             nodeId = id,
             status = ActionStatus.NEW,
             value = (data["value"] ?: "") as String

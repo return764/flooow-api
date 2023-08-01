@@ -4,5 +4,5 @@ package com.cn.tg.flooow.model.action.annotation
 @Retention(AnnotationRetention.RUNTIME)
 annotation class ActionOption(
     val name: String,
-    val defaultValue: String
+    val defaultValue: String = ""
 )
