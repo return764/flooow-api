@@ -3,7 +3,6 @@ package com.cn.tg.flooow.service
 import com.cn.tg.flooow.controller.request.GraphCreationRequest
 import com.cn.tg.flooow.entity.ActionOptionPO
 import com.cn.tg.flooow.entity.GraphPO
-import com.cn.tg.flooow.entity.OptionTypeValue
 import com.cn.tg.flooow.entity.vo.ActionOptionVO
 import com.cn.tg.flooow.entity.vo.ActionTemplateVO
 import com.cn.tg.flooow.entity.vo.ActionVO
@@ -78,6 +77,7 @@ class GraphService(
                     actionId = action.id!!,
                     nodeId = node.id,
                     key = it.key,
+                    type = it.type,
                     typeValue = it.defaultTypeValue.copy(value = value ?: it.defaultTypeValue.value),
                     inputType = OptionInputType.DEFAULT,
                     visible = it.visible
@@ -153,9 +153,8 @@ class GraphService(
         val changedActionOptions = actionOptions.map {
             it.copy(
                 inputType = mappedActionOptions[it.id]?.inputType ?: it.inputType,
-                typeValue = OptionTypeValue(
-                    mappedActionOptions[it.id]?.type ?: it.typeValue.type,
-                    mappedActionOptions[it.id]?.value ?: it.typeValue.value,
+                typeValue = it.typeValue.copy(
+                    value = mappedActionOptions[it.id]?.value ?: it.typeValue.value
                 )
             )
         }

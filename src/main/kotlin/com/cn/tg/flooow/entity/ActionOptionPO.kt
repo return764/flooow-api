@@ -3,6 +3,7 @@ package com.cn.tg.flooow.entity
 import com.cn.tg.flooow.entity.base.AuditingEntity
 import com.cn.tg.flooow.entity.vo.ActionOptionVO
 import com.cn.tg.flooow.enums.OptionInputType
+import com.cn.tg.flooow.enums.OptionType
 import io.hypersistence.utils.hibernate.type.json.JsonType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -31,6 +32,9 @@ data class ActionOptionPO(
     val nodeId: String,
     @Column(name = "key")
     val key: String,
+    @Column(name = "type")
+    @Enumerated(EnumType.STRING)
+    val type: OptionType,
     @Column(name = "input_type")
     @Enumerated(EnumType.STRING)
     val inputType: OptionInputType,
@@ -47,7 +51,7 @@ data class ActionOptionPO(
             id = id!!,
             label = key,
             inputType = inputType,
-            type = typeValue.type,
+            type = type,
             value = typeValue.value
         )
     }

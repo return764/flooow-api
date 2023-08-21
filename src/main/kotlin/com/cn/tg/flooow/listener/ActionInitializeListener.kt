@@ -3,6 +3,7 @@ package com.cn.tg.flooow.listener
 import com.cn.tg.flooow.entity.ActionTemplateOptionPO
 import com.cn.tg.flooow.entity.ActionTemplatePO
 import com.cn.tg.flooow.entity.OptionTypeValue
+import com.cn.tg.flooow.enums.OptionType
 import com.cn.tg.flooow.model.action.Action
 import com.cn.tg.flooow.model.action.annotation.ActionMarker
 import com.cn.tg.flooow.model.action.annotation.ActionOption
@@ -61,6 +62,7 @@ class ActionInitializeListener(
                 ActionTemplateOptionPO(
                     templateId = newTemplate.id!!,
                     key = option.name,
+                    type = OptionType.parseFromField(field),
                     defaultTypeValue = OptionTypeValue(field.type.typeName, option.defaultValue.ifBlank { null }),
                     visible = true
                 )
@@ -83,12 +85,14 @@ class ActionInitializeListener(
                 templateId = template.id!!,
                 key = "label",
                 defaultTypeValue = OptionTypeValue("java.lang.String",actionMarker.label),
+                type = OptionType.STRING,
                 visible = false
             ),
             ActionTemplateOptionPO(
                 templateId = template.id,
                 key = "template",
                 defaultTypeValue = OptionTypeValue("java.lang.String",actionMarker.name),
+                type = OptionType.STRING,
                 visible = false
             ),
         )
