@@ -1,8 +1,6 @@
 package com.cn.tg.flooow.controller
 
 import com.cn.tg.flooow.controller.request.GraphCreationRequest
-import com.cn.tg.flooow.controller.request.UpdateActionOptionsRequest
-import com.cn.tg.flooow.entity.vo.ActionOptionVO
 import com.cn.tg.flooow.entity.vo.ActionTemplateVO
 import com.cn.tg.flooow.entity.vo.GraphDataVO
 import com.cn.tg.flooow.entity.vo.GraphSummaryVO
@@ -47,17 +45,6 @@ class GraphController(
     @GetMapping
     fun getGraphList(): List<GraphSummaryVO> {
         return graphService.retrieveAllGraph()
-    }
-
-    @GetMapping("node/{nodeId}/options")
-    fun getActionOptions(@PathVariable nodeId: String): List<ActionOptionVO>{
-        return graphService.getActionOptions(nodeId)
-    }
-
-    @PostMapping("node/{nodeId}/options")
-    fun updateActionOptions(@PathVariable nodeId: String,
-                            @RequestBody request: UpdateActionOptionsRequest): List<ActionOptionVO>{
-        return graphService.updateActionOptions(nodeId, request.data)
     }
 
     @GetMapping("templates")
