@@ -8,6 +8,7 @@ data class ActionOptionVO(
     val label: String,
     val type: OptionType,
     val inputType: OptionInputType,
+    val javaType: String,
     val value: Any?
 ) {
 

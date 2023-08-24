@@ -6,10 +6,10 @@ import com.cn.tg.flooow.model.action.AbstractAction
 import com.cn.tg.flooow.model.action.Action
 import com.cn.tg.flooow.model.action.annotation.ActionMarker
 import com.cn.tg.flooow.model.action.annotation.ActionOption
+import com.cn.tg.flooow.model.action.template.enums.HttpMethod
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.springframework.http.HttpMethod
 import java.io.IOException
 
 
@@ -17,13 +17,13 @@ import java.io.IOException
 class HttpProcessAction: AbstractAction(), Action {
 
     @ActionOption(name = "method", defaultValue = "GET")
-    private lateinit var method: String
+    private lateinit var method: HttpMethod
 
     @ActionOption(name = "url", defaultValue = "")
     private lateinit var url: String
 
     override fun validate() {
-        if (!HttpMethod.values().toSet().map { it.name() }.contains(method)) {
+        if (!HttpMethod.values().toSet().contains(method)) {
             throw TaskValidationException("not support http method")
         }
 
@@ -35,9 +35,9 @@ class HttpProcessAction: AbstractAction(), Action {
     override fun run() {
         val client = OkHttpClient()
         val requestBuilder = Request.Builder().url(url)
-        if (method == "GET") {
+        if (method.name == "GET") {
             requestBuilder.get()
-        } else if (method == "POST") {
+        } else if (method.name == "POST") {
             requestBuilder.post("".toRequestBody())
         }
         try {

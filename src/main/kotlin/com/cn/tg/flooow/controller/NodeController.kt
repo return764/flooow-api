@@ -1,6 +1,7 @@
 package com.cn.tg.flooow.controller
 
 import com.cn.tg.flooow.controller.request.UpdateActionOptionsRequest
+import com.cn.tg.flooow.controller.response.Option
 import com.cn.tg.flooow.entity.vo.ActionOptionVO
 import com.cn.tg.flooow.service.GraphService
 import org.springframework.web.bind.annotation.GetMapping
@@ -26,5 +27,22 @@ class NodeController(
                             @RequestBody request: UpdateActionOptionsRequest
     ): List<ActionOptionVO>{
         return graphService.updateActionOptions(nodeId, request.data)
+    }
+
+    @GetMapping("enumOptions")
+    fun getEnumOptions(javaType: String): List<Option>{
+        try {
+            val clazz = Class.forName(javaType)
+
+            if (!clazz.isEnum) {
+                throw RuntimeException("type is not support.")
+            }
+
+            return clazz.enumConstants.map {
+                Option(it.toString(), it.toString())
+            }
+        } catch (e: ClassNotFoundException) {
+            throw RuntimeException("type is invalid.")
+        }
     }
 }

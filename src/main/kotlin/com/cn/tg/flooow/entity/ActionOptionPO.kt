@@ -52,7 +52,8 @@ data class ActionOptionPO(
             label = key,
             inputType = inputType,
             type = type,
-            value = typeValue.value
+            value = typeValue.value,
+            javaType = typeValue.type
         )
     }
 }
