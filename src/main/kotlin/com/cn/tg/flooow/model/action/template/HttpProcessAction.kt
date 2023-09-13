@@ -7,6 +7,7 @@ import com.cn.tg.flooow.model.action.Action
 import com.cn.tg.flooow.model.action.annotation.ActionMarker
 import com.cn.tg.flooow.model.action.annotation.ActionOption
 import com.cn.tg.flooow.model.action.template.enums.HttpMethod
+import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -19,7 +20,10 @@ class HttpProcessAction: AbstractAction(), Action {
     @ActionOption(name = "method", defaultValue = "GET")
     private lateinit var method: HttpMethod
 
-    @ActionOption(name = "url", defaultValue = "")
+    @ActionOption(name = "headers")
+    private lateinit var headers: Map<String, String>
+
+    @ActionOption(name = "url")
     private lateinit var url: String
 
     override fun validate() {
@@ -34,7 +38,7 @@ class HttpProcessAction: AbstractAction(), Action {
 
     override fun run() {
         val client = OkHttpClient()
-        val requestBuilder = Request.Builder().url(url)
+        val requestBuilder = Request.Builder().headers(headers.toHeaders()).url(url)
         if (method.name == "GET") {
             requestBuilder.get()
         } else if (method.name == "POST") {
