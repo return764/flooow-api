@@ -53,7 +53,6 @@ data class ActionOptionPO(
             inputType = inputType,
             type = type,
             value = typeValue.value,
-            javaType = typeValue.type
         )
     }
 }

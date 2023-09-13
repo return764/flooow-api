@@ -170,4 +170,10 @@ class GraphService(
         val graph = graphRepository.findById(id).orElseThrow()
         return graphRepository.delete(graph).let { graph.toSummary() }
     }
+
+    fun getActionOptionById(id: String): ActionOptionPO {
+        return actionOptionRepository.findById(id).orElseThrow {
+            RuntimeException("Action Option NotFound.")
+        }
+    }
 }
