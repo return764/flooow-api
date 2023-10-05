@@ -1,13 +1,11 @@
 package com.cn.tg.flooow.entity.vo
 
-import com.cn.tg.flooow.enums.OptionInputType
-import com.cn.tg.flooow.enums.OptionType
+import com.cn.tg.flooow.enums.OptionValueType
 
 data class ActionOptionVO(
     val id: String,
     val label: String,
-    val type: OptionType,
-    val inputType: OptionInputType,
+    val valueType: OptionValueType,
     val value: Any?
 ) {
 

@@ -3,7 +3,7 @@ package com.cn.tg.flooow.controller
 import com.cn.tg.flooow.controller.request.UpdateActionOptionsRequest
 import com.cn.tg.flooow.controller.response.Option
 import com.cn.tg.flooow.entity.vo.ActionOptionVO
-import com.cn.tg.flooow.enums.OptionType
+import com.cn.tg.flooow.enums.OptionValueType
 import com.cn.tg.flooow.service.GraphService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -33,11 +33,11 @@ class NodeController(
     @GetMapping("enumOptions")
     fun getEnumOptions(id: String): List<Option>{
         val optionPO = graphService.getActionOptionById(id)
-        if (OptionType.ENUM != optionPO.type) {
+        if (OptionValueType.ENUM != optionPO.valueType) {
             throw RuntimeException("this option type is not ENUM.")
         }
         try {
-            val clazz = Class.forName(optionPO.typeValue.type)
+            val clazz = Class.forName(optionPO.typeAndValue.type)
 
             if (!clazz.isEnum) {
                 throw RuntimeException("type is not support.")

@@ -1,13 +1,10 @@
 package com.cn.tg.flooow.service.handler
 
 import com.cn.tg.flooow.entity.vo.ActionOptionVO
-import com.cn.tg.flooow.enums.OptionInputType
 import com.cn.tg.flooow.model.action.Action
 import com.cn.tg.flooow.service.TaskContext
-import org.springframework.stereotype.Component
 import java.lang.reflect.Field
 
-@Component
 class LastOutputActionOptionFillingHandler: ActionOptionFillingHandler {
 
     override fun apply(
@@ -21,9 +18,5 @@ class LastOutputActionOptionFillingHandler: ActionOptionFillingHandler {
             optionName2Field[it.label]?.trySetAccessible()
             optionName2Field[it.label]?.set(action, runtimeInputMap[it.value])
         }
-    }
-
-    override fun getOptionInputType(): OptionInputType {
-        return OptionInputType.LAST_OUTPUT
     }
 }

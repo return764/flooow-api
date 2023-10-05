@@ -2,8 +2,8 @@ package com.cn.tg.flooow.entity
 
 import com.cn.tg.flooow.entity.base.AuditingEntity
 import com.cn.tg.flooow.entity.vo.ActionOptionVO
-import com.cn.tg.flooow.enums.OptionInputType
 import com.cn.tg.flooow.enums.OptionType
+import com.cn.tg.flooow.enums.OptionValueType
 import io.hypersistence.utils.hibernate.type.json.JsonType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -35,12 +35,12 @@ data class ActionOptionPO(
     @Column(name = "type")
     @Enumerated(EnumType.STRING)
     val type: OptionType,
-    @Column(name = "input_type")
+    @Column(name = "value_type")
     @Enumerated(EnumType.STRING)
-    val inputType: OptionInputType,
+    val valueType: OptionValueType,
     @Type(JsonType::class)
-    @Column(name = "type_value", columnDefinition = "jsonb")
-    val typeValue: OptionTypeValue,
+    @Column(name = "json_type_value", columnDefinition = "jsonb")
+    val typeAndValue: OptionTypeValue,
     @Column(name = "visible")
     val visible: Boolean,
     override var deletedAt: Instant? = null
@@ -50,9 +50,8 @@ data class ActionOptionPO(
         return ActionOptionVO(
             id = id!!,
             label = key,
-            inputType = inputType,
-            type = type,
-            value = typeValue.value,
+            valueType = valueType,
+            value = typeAndValue.value,
         )
     }
 }

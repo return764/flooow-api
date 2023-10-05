@@ -14,6 +14,4 @@ interface ActionOptionFillingHandler {
         options: List<ActionOptionVO>,
         optionName2Field: Map<String, Field>
     )
-
-    fun getOptionInputType(): OptionInputType
 }

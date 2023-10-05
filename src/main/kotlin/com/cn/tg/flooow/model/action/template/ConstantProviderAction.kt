@@ -12,6 +12,7 @@ class ConstantProviderAction: AbstractAction(), Action {
     private lateinit var value: String
 
     override fun run() {
+        Thread.sleep(1500);
         ctx.returnValue(this, value)
     }
 

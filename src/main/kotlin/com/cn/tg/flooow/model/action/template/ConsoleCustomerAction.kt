@@ -9,6 +9,7 @@ import com.cn.tg.flooow.model.action.annotation.ActionMarker
 class ConsoleCustomerAction:AbstractAction(), Action {
 
     override fun run() {
+        Thread.sleep(2000);
         println("console something ${receiveValue()}")
     }
 

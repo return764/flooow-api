@@ -6,14 +6,14 @@ import com.cn.tg.flooow.entity.GraphPO
 import com.cn.tg.flooow.entity.vo.ActionOptionVO
 import com.cn.tg.flooow.entity.vo.ActionTemplateVO
 import com.cn.tg.flooow.entity.vo.ActionVO
-import com.cn.tg.flooow.repository.ActionRepository
-import com.cn.tg.flooow.model.Edge
 import com.cn.tg.flooow.entity.vo.GraphDataVO
 import com.cn.tg.flooow.entity.vo.GraphSummaryVO
-import com.cn.tg.flooow.enums.OptionInputType
 import com.cn.tg.flooow.entity.vo.MoveNodeEvent
+import com.cn.tg.flooow.enums.OptionType
+import com.cn.tg.flooow.model.Edge
 import com.cn.tg.flooow.model.Node
 import com.cn.tg.flooow.repository.ActionOptionRepository
+import com.cn.tg.flooow.repository.ActionRepository
 import com.cn.tg.flooow.repository.ActionTemplateOptionRepository
 import com.cn.tg.flooow.repository.ActionTemplateRepository
 import com.cn.tg.flooow.repository.EdgeRepository
@@ -77,10 +77,10 @@ class GraphService(
                     actionId = action.id!!,
                     nodeId = node.id,
                     key = it.key,
-                    type = it.type,
-                    typeValue = it.defaultTypeValue.copy(value = value ?: it.defaultTypeValue.value),
-                    inputType = OptionInputType.DEFAULT,
-                    visible = it.visible
+                    valueType = it.type,
+                    typeAndValue = it.defaultTypeValue.copy(value = value ?: it.defaultTypeValue.value),
+                    visible = it.visible,
+                    type = OptionType.INPUT
                 )
             }.let { actionOptionRepository.saveAll(it) }
             nodeRepository.save(toPO(data["label"] as String, graphId)).toModel(ports, options)
@@ -152,9 +152,8 @@ class GraphService(
         val mappedActionOptions = listActionOptions.associateBy { it.id }
         val changedActionOptions = actionOptions.map {
             it.copy(
-                inputType = mappedActionOptions[it.id]?.inputType ?: it.inputType,
-                typeValue = it.typeValue.copy(
-                    value = mappedActionOptions[it.id]?.value ?: it.typeValue.value
+                typeAndValue = it.typeAndValue.copy(
+                    value = mappedActionOptions[it.id]?.value ?: it.typeAndValue.value
                 )
             )
         }

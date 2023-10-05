@@ -17,11 +17,9 @@ import java.io.IOException
 
 
 @ActionMarker(type = "process", name = "http", shape = "process", label="HTTP Request")
-@ActionReturns(
-    classes = [
-        ActionReturn(name = "data", type = String::class)
-    ]
-)
+@ActionReturns([
+    ActionReturn(name = "data", type = String::class)
+])
 class HttpProcessAction: AbstractAction(), Action {
 
     @ActionOption(name = "method", defaultValue = "GET")

@@ -4,5 +4,5 @@ package com.cn.tg.flooow.model.action.annotation
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class ActionReturns(
-    val classes: Array<ActionReturn>,
+    val value: Array<ActionReturn>,
 )
