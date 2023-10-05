@@ -4,6 +4,7 @@ project: flooow-api
 ## Tech
 - [ ] add global extension function, like list.toVO or list.toPO?
 - [ ] add unit test for code
+- [ ] consider to design action option structure
 
 ## Process
 
