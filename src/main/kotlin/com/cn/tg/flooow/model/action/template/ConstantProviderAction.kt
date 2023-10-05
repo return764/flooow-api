@@ -6,7 +6,7 @@ import com.cn.tg.flooow.model.action.annotation.ActionMarker
 import com.cn.tg.flooow.model.action.annotation.ActionOption
 
 @ActionMarker(name = "constant", type = "provider", shape = "input", label="Constant Input")
-class ConstantProviderAction:AbstractAction(), Action {
+class ConstantProviderAction: AbstractAction(), Action {
 
     @ActionOption(name = "value", defaultValue = "test")
     private lateinit var value: String

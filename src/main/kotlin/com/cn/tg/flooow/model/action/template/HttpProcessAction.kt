@@ -6,6 +6,8 @@ import com.cn.tg.flooow.model.action.AbstractAction
 import com.cn.tg.flooow.model.action.Action
 import com.cn.tg.flooow.model.action.annotation.ActionMarker
 import com.cn.tg.flooow.model.action.annotation.ActionOption
+import com.cn.tg.flooow.model.action.annotation.ActionReturn
+import com.cn.tg.flooow.model.action.annotation.ActionReturns
 import com.cn.tg.flooow.model.action.template.enums.HttpMethod
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
@@ -15,6 +17,11 @@ import java.io.IOException
 
 
 @ActionMarker(type = "process", name = "http", shape = "process", label="HTTP Request")
+@ActionReturns(
+    classes = [
+        ActionReturn(name = "data", type = String::class)
+    ]
+)
 class HttpProcessAction: AbstractAction(), Action {
 
     @ActionOption(name = "method", defaultValue = "GET")

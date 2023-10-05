@@ -14,28 +14,34 @@ import org.slf4j.LoggerFactory
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.ApplicationListener
 import org.springframework.core.annotation.Order
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver
+import org.springframework.core.io.support.ResourcePatternResolver
+import org.springframework.core.type.classreading.SimpleMetadataReaderFactory
 import org.springframework.stereotype.Component
+import org.springframework.util.ClassUtils
+import kotlin.reflect.KClass
+import kotlin.reflect.full.hasAnnotation
+import kotlin.reflect.full.isSubclassOf
+
 
 @Order(0)
 @Component
 class ActionInitializeListener(
     private val actionTemplateRepository: ActionTemplateRepository,
-    private val actionTemplateOptionRepository: ActionTemplateOptionRepository,
-    private val actionTemplates: List<Action>
+    private val actionTemplateOptionRepository: ActionTemplateOptionRepository
 ): ApplicationListener<ApplicationReadyEvent> {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     @Transactional
     override fun onApplicationEvent(event: ApplicationReadyEvent) {
-        actionTemplates
-            .filter { it.javaClass.isAnnotationPresent(ActionMarker::class.java) }
+        scanTemplates()
             .forEach {
-                val actionMarker = it.javaClass.getAnnotation(ActionMarker::class.java)
+                val actionMarker = it.java.getAnnotation(ActionMarker::class.java)
                 val template = actionTemplateRepository.findByTemplateName(actionMarker.name)
                 if (template == null) {
                     val newTemplate = actionTemplateRepository.save(ActionTemplatePO(
                         templateName = actionMarker.name,
-                        className = it.javaClass.name,
+                        className = it.java.name,
                         type = actionMarker.type,
                         shape = actionMarker.shape,
                         parent = actionMarker.parent.ifEmpty { null }
@@ -51,8 +57,31 @@ class ActionInitializeListener(
             }
     }
 
+    private fun scanTemplates(): MutableList<KClass<Action>> {
+        val actionTemplateClasses = mutableListOf<KClass<Action>>()
+
+        val resolver = PathMatchingResourcePatternResolver()
+        val pattern = ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX +
+                ClassUtils.convertClassNameToResourcePath("com.cn.tg.flooow.model.action.template") +
+                "/*.class"
+        val resources = resolver.getResources(pattern)
+        for (resource in resources) {
+            val scannedClassName: String = SimpleMetadataReaderFactory()
+                .getMetadataReader(resource)
+                .classMetadata
+                .className
+            val scannedClass = Class.forName(scannedClassName).kotlin
+            if (scannedClass.isSubclassOf(Action::class)
+                && scannedClass.hasAnnotation<ActionMarker>()
+            ) {
+                actionTemplateClasses.add(scannedClass as KClass<Action>)
+            }
+        }
+        return actionTemplateClasses
+    }
+
     private fun storeActionOptions(
-        it: Action,
+        it: KClass<Action>,
         newTemplate: ActionTemplatePO,
         actionMarker: ActionMarker
     ) {
@@ -73,7 +102,7 @@ class ActionInitializeListener(
             }
     }
 
-    private fun getActionOptionFields(it: Action) = it.javaClass.declaredFields
+    private fun getActionOptionFields(it: KClass<Action>) = it.java.declaredFields
         .filter { item -> item.isAnnotationPresent(ActionOption::class.java) }
 
     private fun otherOptions(
