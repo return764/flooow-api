@@ -3,10 +3,12 @@ package com.cn.tg.flooow.listener
 import com.cn.tg.flooow.entity.ActionTemplateOptionPO
 import com.cn.tg.flooow.entity.ActionTemplatePO
 import com.cn.tg.flooow.entity.OptionTypeValue
+import com.cn.tg.flooow.enums.OptionType
 import com.cn.tg.flooow.enums.OptionValueType
 import com.cn.tg.flooow.model.action.Action
 import com.cn.tg.flooow.model.action.annotation.ActionMarker
 import com.cn.tg.flooow.model.action.annotation.ActionOption
+import com.cn.tg.flooow.model.action.annotation.ActionReturns
 import com.cn.tg.flooow.repository.ActionTemplateOptionRepository
 import com.cn.tg.flooow.repository.ActionTemplateRepository
 import jakarta.transaction.Transactional
@@ -20,6 +22,7 @@ import org.springframework.core.type.classreading.SimpleMetadataReaderFactory
 import org.springframework.stereotype.Component
 import org.springframework.util.ClassUtils
 import kotlin.reflect.KClass
+import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.full.isSubclassOf
 
@@ -44,13 +47,14 @@ class ActionInitializeListener(
                         className = it.java.name,
                         type = actionMarker.type,
                         shape = actionMarker.shape,
+                        label = actionMarker.label,
                         parent = actionMarker.parent.ifEmpty { null }
                     ))
-                    storeActionOptions(it, newTemplate, actionMarker)
+                    storeActionOptions(it, newTemplate)
 
                 } else {
                     actionTemplateOptionRepository.deleteAllByTemplateId(template.id)
-                    storeActionOptions(it, template, actionMarker)
+                    storeActionOptions(it, template)
                 }
                 logger.info("Load action template [${actionMarker.name}] successful")
 
@@ -82,48 +86,40 @@ class ActionInitializeListener(
 
     private fun storeActionOptions(
         it: KClass<Action>,
-        newTemplate: ActionTemplatePO,
-        actionMarker: ActionMarker
+        newTemplate: ActionTemplatePO
     ) {
+        actionTemplateOptionRepository.deleteAllByTemplateId(newTemplate.id)
+        getActionReturns(it)
+            .map {
+                 ActionTemplateOptionPO(
+                    templateId = newTemplate.id!!,
+                    key = it.name,
+                    type = OptionType.OUTPUT,
+                    valueType = OptionValueType.parse(it.type.java),
+                    defaultTypeValue = OptionTypeValue(it.type.toString(), null),
+                    visible = true
+                )
+            }.also { list ->
+                actionTemplateOptionRepository.saveAll(list)
+            }
         getActionOptionFields(it)
             .map { field ->
                 val option = field.getAnnotation(ActionOption::class.java)
                 ActionTemplateOptionPO(
                     templateId = newTemplate.id!!,
                     key = option.name,
-                    type = OptionValueType.parseFromField(field),
+                    type = OptionType.INPUT,
+                    valueType = OptionValueType.parseFromField(field),
                     defaultTypeValue = OptionTypeValue(field.type.typeName, option.defaultValue.ifBlank { null }),
                     visible = true
                 )
             }.also { list ->
-                actionTemplateOptionRepository.deleteAllByTemplateId(newTemplate.id)
                 actionTemplateOptionRepository.saveAll(list)
-                actionTemplateOptionRepository.saveAll(otherOptions(newTemplate, actionMarker))
             }
     }
 
     private fun getActionOptionFields(it: KClass<Action>) = it.java.declaredFields
         .filter { item -> item.isAnnotationPresent(ActionOption::class.java) }
 
-    private fun otherOptions(
-        template: ActionTemplatePO,
-        actionMarker: ActionMarker
-    ): List<ActionTemplateOptionPO> {
-        return listOf(
-            ActionTemplateOptionPO(
-                templateId = template.id!!,
-                key = "label",
-                defaultTypeValue = OptionTypeValue("java.lang.String",actionMarker.label),
-                type = OptionValueType.STRING,
-                visible = false
-            ),
-            ActionTemplateOptionPO(
-                templateId = template.id,
-                key = "template",
-                defaultTypeValue = OptionTypeValue("java.lang.String",actionMarker.name),
-                type = OptionValueType.STRING,
-                visible = false
-            ),
-        )
-    }
+    private fun getActionReturns(it: KClass<Action>) = it.findAnnotation<ActionReturns>().let { it?.value ?: emptyArray() }
 }

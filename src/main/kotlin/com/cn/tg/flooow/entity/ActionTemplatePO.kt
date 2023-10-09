@@ -19,6 +19,9 @@ data class ActionTemplatePO(
     @Column(name = "template_name")
     val templateName: String,
 
+    @Column(name = "label")
+    val label: String,
+
     @Column(name = "type")
     val type: String,
 

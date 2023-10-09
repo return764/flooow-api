@@ -77,7 +77,7 @@ class GraphService(
                     actionId = action.id!!,
                     nodeId = node.id,
                     key = it.key,
-                    valueType = it.type,
+                    valueType = it.valueType,
                     typeAndValue = it.defaultTypeValue.copy(value = value ?: it.defaultTypeValue.value),
                     visible = it.visible,
                     type = OptionType.INPUT

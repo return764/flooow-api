@@ -1,5 +1,6 @@
 package com.cn.tg.flooow.entity
 
+import com.cn.tg.flooow.enums.OptionType
 import com.cn.tg.flooow.enums.OptionValueType
 import io.hypersistence.utils.hibernate.type.json.JsonType
 import jakarta.persistence.Column
@@ -21,7 +22,10 @@ data class ActionTemplateOptionPO(
     val templateId: String,
     @Column(name = "type")
     @Enumerated(EnumType.STRING)
-    val type: OptionValueType,
+    val type: OptionType,
+    @Column(name = "value_type")
+    @Enumerated(EnumType.STRING)
+    val valueType: OptionValueType,
     @Column(name = "key")
     val key: String,
     @Type(JsonType::class)

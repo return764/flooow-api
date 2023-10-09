@@ -9,12 +9,15 @@ enum class OptionValueType {
 
     companion object {
         fun parseFromField(field: Field): OptionValueType {
-            val type = field.type
-            if (type.isEnum) {
+            return parse(field.type)
+        }
+
+        fun parse(clazz: Class<*>): OptionValueType {
+            if (clazz.isEnum) {
                 return ENUM
             }
 
-            if (Map::class.java.isAssignableFrom(type)) {
+            if (Map::class.java.isAssignableFrom(clazz)) {
                 return MAP
             }
             return STRING

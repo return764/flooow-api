@@ -1,7 +1,6 @@
 package com.cn.tg.flooow.service.handler
 
 import com.cn.tg.flooow.entity.vo.ActionOptionVO
-import com.cn.tg.flooow.enums.OptionInputType
 import com.cn.tg.flooow.model.action.Action
 import com.cn.tg.flooow.service.TaskContext
 import java.lang.reflect.Field
